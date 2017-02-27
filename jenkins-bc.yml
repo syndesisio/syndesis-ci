@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  labels:
+    app: jenkins
+  name: jenkins
+  namespace: ipaas-ci
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: jenkins:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    git:
+      uri: https://github.com/redhat-ipaas/jenkins.git
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: jenkins-2-centos
+        namespace: openshift
+    type: Source
+  triggers:
+  - github:
+      secret: LXFFCFo-HU-OylUwcSvY
+    type: GitHub
+  - type: ConfigChange
