@@ -1,0 +1,245 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: redhat-ipaas-ci
+parameters:
+- name: KUBERNETES_NAMESPACE
+  description: The target namespace
+  value: ipaas-ci
+  required: true
+- name: ROUTE_HOSTNAME
+  description: The external hostname to access the iPaaS
+  value: jenkins-ipaas-ci.b6ff.rh-idev.openshiftapps.com
+  required: true
+- name: JENKINS_DATA_CLAIM_NAME
+  description: The name of the PersistentVolumeClaim to use for saving Jenkins state.
+  value: jenkins-data
+objects:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: jenkins
+    labels:
+      app: ipaas-ci
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+    labels:
+      app: ipaas-ci
+    name: jenkins-2-centos7
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: docker.io/openshift/jenkins-2-centos7:latest
+      importPolicy: {}
+      name: latest
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: ipaas-ci
+    name: ipaas-jenkins
+  spec: {}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: ipaas-ci
+    name: ipaas-jenkins
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ipaas-jenkins:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        uri: https://github.com/redhat-ipaas/ipaas-jenkins.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: jenkins-2-centos7:latest
+          forcePull: true
+      type: Source
+    triggers:
+    - github:
+        secret: secret101
+      type: GitHub
+    - type: ConfigChange
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ipaas-ci
+      template: redhat-ipaas-ci
+    name: jenkins
+  spec:
+    replicas: 1
+    selector:
+      name: jenkins
+    strategy:
+      recreateParams:
+        timeoutSeconds: 1200
+      resources: {}
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: ipaas-ci
+          name: jenkins
+      spec:
+        containers:
+        - env:
+          - name: OPENSHIFT_ENABLE_OAUTH
+            value: "true"
+          - name: OPENSHIFT_ENABLE_REDIRECT_PROMPT
+            value: "true"
+          - name: KUBERNETES_MASTER
+            value: https://kubernetes.default:443
+          - name: KUBERNETES_TRUST_CERTIFICATES
+            value: "true"
+          - name: JNLP_SERVICE_NAME
+            value: jenkins-jnlp
+          image: ipaas-jenkins
+          imagePullPolicy: IfNotPresent
+          name: jenkins
+          ports:
+            - containerPort: 50000
+              name: "slave"
+            - containerPort: 8080
+              name: "http"
+          livenessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /login
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 420
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: 2Gi
+          securityContext:
+            capabilities: {}
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/lib/jenkins
+            name: jenkins-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        serviceAccount: jenkins
+        serviceAccountName: jenkins
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: jenkins-data
+          persistentVolumeClaim:
+            claimName: jenkins-data
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - jenkins
+        from:
+          kind: ImageStreamTag
+          name: jenkins:2
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ipaas-ci
+      template: redhat-ipaas-ci
+    name: jenkins
+  spec:
+    ports:
+    - name: web
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: jenkins
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ipaas-ci
+      template: redhat-ipaas-ci
+    name: jenkins-jnlp
+  spec:
+    ports:
+    - name: agent
+      port: 50000
+      protocol: TCP
+      targetPort: 50000
+    selector:
+      name: jenkins
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: ipaas-ci
+    name: jenkins
+  spec:
+    host: ${ROUTE_HOSTNAME}
+    path: /
+    port:
+      targetPort: 8080
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
+    to:
+      kind: Service
+      name: jenkins
+      weight: 100
+- apiVersion: v1
+  kind: RoleBinding
+  metadata:
+    name: ipaas:admins
+    labels:
+      app: ipaas-ci
+  roleRef:
+    name: admin
+  subjects:
+  - kind: ServiceAccount
+    name: jenkins
+- apiVersion: v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: ipaas:provisioner
+    labels:
+      app: ipaas-ci
+  roleRef:
+    name: self-provisioner
+  subjects:
+  - kind: ServiceAccount
+    namespace: ${KUBERNETES_NAMESPACE}
+    name: jenkins

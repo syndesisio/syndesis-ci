@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: redhat-ipaas-ci
+items:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: ipaas-ci
+    name: jenkins-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: ipaas-ci
+    name: m2-local-repo
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
