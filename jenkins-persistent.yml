@@ -164,8 +164,8 @@ objects:
         - jenkins
         from:
           kind: ImageStreamTag
-          name: jenkins:2
-          namespace: openshift
+          name: ipaas-jenkins:latest
+          namespace: ${KUBERNETES_NAMESPACE}
       type: ImageChange
     - type: ConfigChange
 - apiVersion: v1
