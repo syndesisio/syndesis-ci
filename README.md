@@ -4,7 +4,7 @@ Provides an Openshift Template for Jenkins.
 
 ## Installation
 
-Currently there are two falvors provided:
+Currently there are two flavors provided:
 
 - Ephemeral
 - Persistent
