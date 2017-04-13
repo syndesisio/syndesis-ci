@@ -10,6 +10,15 @@ parameters:
   description: The external hostname to access the iPaaS
   value: jenkins-ipaas-ci.b6ff.rh-idev.openshiftapps.com
   required: true
+- name: GITHUB_USERNAME
+  description: The github username (for project scanning and webhook management).
+  required: true
+- name: GITHUB_PASSWORD
+  description: The github password (for project scanning and webhook management).
+  required: true
+- name: GITHUB_ACCESS_TOKEN
+  description: The github access token (for webhook management).
+  required: true
 objects:
 - apiVersion: v1
   kind: ServiceAccount
@@ -71,6 +80,18 @@ objects:
       type: GitHub
     - type: ConfigChange
 - apiVersion: v1
+  kind: Secret
+  metadata:
+    labels:
+      app: ipaas-ci
+      template: redhat-ipaas-ci
+    name: github-account
+  type: kubernetes.io/basic-auth
+  stringData:
+    username: ${GITHUB_USERNAME}
+    password: ${GITHUB_PASSWORD}
+    token: ${GITHUB_ACCESS_TOKEN}
+- apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
@@ -104,6 +125,21 @@ objects:
             value: "true"
           - name: JNLP_SERVICE_NAME
             value: jenkins-jnlp
+          - name: GITHUB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: github-account
+          - name: GITHUB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: github-account
+          - name: GITHUB_ACCESS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: github-account
           image: ipaas-jenkins
           imagePullPolicy: IfNotPresent
           name: jenkins
