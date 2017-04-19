@@ -8,10 +8,11 @@ items:
   metadata:
     labels:
       app: ipaas-ci
-    name: jenkins-data
+    name: nexus-volume
   spec:
     accessModes:
     - ReadWriteOnce
     resources:
       requests:
         storage: 10Gi
+

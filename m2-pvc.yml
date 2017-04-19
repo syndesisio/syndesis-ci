@@ -8,7 +8,7 @@ items:
   metadata:
     labels:
       app: ipaas-ci
-    name: jenkins-data
+    name: m2-local-repo
   spec:
     accessModes:
     - ReadWriteOnce

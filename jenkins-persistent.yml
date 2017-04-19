@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: redhat-ipaas-ci
+  name: jenkins
 parameters:
 - name: KUBERNETES_NAMESPACE
   description: The target namespace
@@ -29,13 +29,13 @@ objects:
   metadata:
     name: jenkins
     labels:
-      app: ipaas-ci
+      app: jenkins
 - apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
     labels:
-      app: ipaas-ci
+      app: jenkins
     name: jenkins-2-centos7
   spec:
     tags:
@@ -49,14 +49,14 @@ objects:
   kind: ImageStream
   metadata:
     labels:
-      app: ipaas-ci
+      app: jenkins
     name: ipaas-jenkins
   spec: {}
 - apiVersion: v1
   kind: BuildConfig
   metadata:
     labels:
-      app: ipaas-ci
+      app: jenkins
     name: ipaas-jenkins
   spec:
     nodeSelector: null
@@ -87,8 +87,7 @@ objects:
   kind: Secret
   metadata:
     labels:
-      app: ipaas-ci
-      template: redhat-ipaas-ci
+      app: jenkins
     name: github-account
   type: kubernetes.io/basic-auth
   stringData:
@@ -99,8 +98,7 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
-      app: ipaas-ci
-      template: redhat-ipaas-ci
+      app: jenkins
     name: jenkins
   spec:
     replicas: 1
@@ -114,7 +112,7 @@ objects:
     template:
       metadata:
         labels:
-          app: ipaas-ci
+          app: jenkins
           name: jenkins
       spec:
         containers:
@@ -208,8 +206,7 @@ objects:
   kind: Service
   metadata:
     labels:
-      app: ipaas-ci
-      template: redhat-ipaas-ci
+      app: jenkins
     name: jenkins
   spec:
     ports:
@@ -225,8 +222,7 @@ objects:
   kind: Service
   metadata:
     labels:
-      app: ipaas-ci
-      template: redhat-ipaas-ci
+      app: jenkins
     name: jenkins-jnlp
   spec:
     ports:
@@ -242,7 +238,7 @@ objects:
   kind: Route
   metadata:
     labels:
-      app: ipaas-ci
+      app: jenkins
     name: jenkins
   spec:
     host: ${ROUTE_HOSTNAME}
@@ -260,8 +256,6 @@ objects:
   kind: RoleBinding
   metadata:
     name: ipaas:admins
-    labels:
-      app: ipaas-ci
   roleRef:
     name: admin
   subjects:
@@ -271,8 +265,6 @@ objects:
   kind: ClusterRoleBinding
   metadata:
     name: ipaas:provisioner
-    labels:
-      app: ipaas-ci
   roleRef:
     name: self-provisioner
   subjects:
