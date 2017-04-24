@@ -16,14 +16,14 @@ objects:
   metadata:
     labels:
       app: nexus
-    name: nexus3
+    name: nexus
   spec:
     tags:
     - annotations:
-        openshift.io/imported-from: sonatype/nexus
+        openshift.io/imported-from: fabric8/nexus
       from:
         kind: DockerImage
-        name: fabric8/nexus:2.2.331.2
+        name: fabric8/nexus:latest
       importPolicy: {}
       name: latest
 - apiVersion: v1
@@ -84,7 +84,7 @@ objects:
         - nexus
         from:
           kind: ImageStreamTag
-          name: nexus3:latest
+          name: nexus:latest
       type: ImageChange
 - apiVersion: v1
   kind: Service

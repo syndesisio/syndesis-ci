@@ -23,7 +23,7 @@ objects:
         openshift.io/imported-from: fabric8/nexus
       from:
         kind: DockerImage
-        name: fabric8/nexus:2.2.331.2
+        name: fabric8/nexus:latest
       importPolicy: {}
       name: latest
 - apiVersion: v1
