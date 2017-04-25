@@ -52,11 +52,5 @@ For nexus:
 For maven builds to use nexus as a mirror, you need to use the appropriate `settings.xml` file.
 A secret providing such a file can be created using:
 
-   
-    oc create -f m2-settings.yml | oc create -f -
-
-
-The project also provides a pvc that can be used as a local maven repository:
-
     oc create secret generic m2-settings --from-file settings.xml
 

@@ -19,10 +19,17 @@
 
   <mirrors>
     <mirror>
-      <id>nexus</id>
+      <id>nexus-central</id>
       <name>Nexus Central Mirror</name>
       <url>http://nexus:8081/content/repositories/central/</url>
-      <mirrorOf>central,jcenter-releases</mirrorOf>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+
+    <mirror>
+      <id>nexus-jcenter</id>
+      <name>Nexus Central Mirror</name>
+      <url>http://nexus:8081/content/repositories/jcenter/</url>
+      <mirrorOf>jcenter-releases</mirrorOf>
     </mirror>
   </mirrors>
 
