@@ -20,6 +20,12 @@ parameters:
 - name: GITHUB_ACCESS_TOKEN
   description: The github access token (for webhook management).
   required: true
+- name: GITHUB_OAUTH_CLIENT_ID
+  description: The github oauth client id.
+  required: true
+- name: GITHUB_OAUTH_CLIENT_SECRET
+  description: The github oauth client secret.
+  required: true
 - name: JENKINS_DATA_CLAIM_NAME
   description: The name of the PersistentVolumeClaim to use for saving Jenkins state.
   value: jenkins-data
@@ -30,6 +36,8 @@ objects:
     name: jenkins
     labels:
       app: jenkins
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.jenkins: "{\"kind\":\"OAuthRedirectReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"Route\",\"name\":\"jenkins\"}}"
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -94,6 +102,8 @@ objects:
     username: ${GITHUB_USERNAME}
     password: ${GITHUB_PASSWORD}
     token: ${GITHUB_ACCESS_TOKEN}
+    oauthClientId: ${GITHUB_OAUTH_CLIENT_ID}
+    oauthClientSecret: ${GITHUB_OAUTH_CLIENT_SECRET}
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -141,6 +151,16 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: token
+                name: github-account
+          - name: GITHUB_OAUTH_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                key: oauthClientId
+                name: github-account
+          - name: GITHUB_OAUTH_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: oauthClientSecret
                 name: github-account
           image: ipaas-jenkins
           imagePullPolicy: IfNotPresent

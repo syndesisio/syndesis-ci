@@ -38,6 +38,8 @@ For Jenkins:
      GITHUB_USERNAME=<github username> \
      GITHUB_PASSWORD=<github password> \
      GITHUB_ACCESS_TOKEN=<github access token password> \
+     GITHUB_OAUTH_CLIENT_ID=<github oauth client id> \
+     GITHUB_OAUTH_CLIENT_SECRET=<github oauth client secret> \
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
      KUBERNETES_NAMESPACE=$(oc project -q) | oc create -f -
 
