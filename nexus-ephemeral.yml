@@ -5,10 +5,10 @@ metadata:
 parameters:
 - name: KUBERNETES_NAMESPACE
   description: The target namespace
-  value: ipaas-ci
+  value: syndesis-ci
 - name: ROUTE_HOSTNAME
   description: The external hostname to access the iPaaS
-  value: jenkins-ipaas-ci.b6ff.rh-idev.openshiftapps.com
+  value: jenkins-syndesis-ci.b6ff.rh-idev.openshiftapps.com
   required: true
 objects:
 - apiVersion: v1

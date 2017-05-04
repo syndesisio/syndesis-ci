@@ -5,11 +5,11 @@ metadata:
 parameters:
 - name: KUBERNETES_NAMESPACE
   description: The target namespace
-  value: ipaas-ci
+  value: syndesis-ci
   required: true
 - name: ROUTE_HOSTNAME
   description: The external hostname to access the iPaaS
-  value: jenkins-ipaas-ci.b6ff.rh-idev.openshiftapps.com
+  value: jenkins-syndesis-ci.b6ff.rh-idev.openshiftapps.com
   required: true
 - name: GITHUB_USERNAME
   description: The github username (for project scanning and webhook management).
@@ -58,26 +58,26 @@ objects:
   metadata:
     labels:
       app: jenkins
-    name: ipaas-jenkins
+    name: syndesis-jenkins
   spec: {}
 - apiVersion: v1
   kind: BuildConfig
   metadata:
     labels:
       app: jenkins
-    name: ipaas-jenkins
+    name: syndesis-jenkins
   spec:
     nodeSelector: null
     output:
       to:
         kind: ImageStreamTag
-        name: ipaas-jenkins:latest
+        name: syndesis-jenkins:latest
     postCommit: {}
     resources: {}
     runPolicy: Serial
     source:
       git:
-        uri: https://github.com/redhat-ipaas/ipaas-jenkins.git
+        uri: https://github.com/syndesisio/syndesis-jenkins.git
       type: Git
     strategy:
       sourceStrategy:
@@ -162,7 +162,7 @@ objects:
               secretKeyRef:
                 key: oauthClientSecret
                 name: github-account
-          image: ipaas-jenkins
+          image: syndesis-jenkins
           imagePullPolicy: IfNotPresent
           name: jenkins
           ports:
@@ -218,7 +218,7 @@ objects:
         - jenkins
         from:
           kind: ImageStreamTag
-          name: ipaas-jenkins:latest
+          name: syndesis-jenkins:latest
           namespace: ${KUBERNETES_NAMESPACE}
       type: ImageChange
     - type: ConfigChange
@@ -275,7 +275,7 @@ objects:
 - apiVersion: v1
   kind: RoleBinding
   metadata:
-    name: ipaas:admins
+    name: syndesis:admins
   roleRef:
     name: admin
   subjects:
@@ -284,7 +284,7 @@ objects:
 - apiVersion: v1
   kind: ClusterRoleBinding
   metadata:
-    name: ipaas:provisioner
+    name: syndesis:provisioner
   roleRef:
     name: self-provisioner
   subjects:

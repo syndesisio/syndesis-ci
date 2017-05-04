@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: redhat-ipaas-ci
+  name: syndesis-ci
 items:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
     labels:
-      app: ipaas-ci
+      app: syndesis-ci
     name: jenkins-data
   spec:
     accessModes:
