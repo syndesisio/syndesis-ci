@@ -3,6 +3,7 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
 
+  <localRepository>/home/jenkins/mvnrepo</localRepository>
   <servers>
     <server>
       <id>nexus-snapshots</id>
@@ -14,8 +15,17 @@
       <username>admin</username>
       <password>admin123</password>
     </server>
+    <server>
+      <id>oss-sonatype-staging</id>
+      <username>${SONATYPE_USERNAME}</username>
+      <password>${SONATYPE_PASSWORD}</password>
+    </server>
+    <server>
+      <id>oss-sonatype-snapshots</id>
+      <username>${SONATYPE_USERNAME}</username>
+      <password>${SONATYPE_PASSWORD}</password>
+    </server>
   </servers>
-
 
   <mirrors>
     <mirror>
@@ -32,5 +42,18 @@
       <mirrorOf>jcenter-releases</mirrorOf>
     </mirror>
   </mirrors>
+
+  <profiles>
+    <profile>
+      <id>syndesis-ci</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <gpg.keyname>${GPG_NAME}</gpg.keyname>
+        <gpg.passphrase></gpg.passphrase>
+      </properties>
+    </profile>
+  </profiles>
 
 </settings>
