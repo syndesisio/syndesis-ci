@@ -74,6 +74,9 @@ oc create secret generic m2-settings --from-file=$TMP_KEY_DIR/m2/settings.xml
 #Install dockerhub secret
 oc secrets new-dockercfg dockerhub --docker-server=https://index.docker.io/v1/ --docker-username=$(pass show dockerhub/syndesisci/username) --docker-password=$(pass show dockerhub/syndesisci/password) --docker-email=$(pass show dockerhub/syndesisci/email)
 
+#Install Nexus config file
+oc create configmap nexus-config-map --from-file=nexus.xml.file=nexus.xml
+
 #cleanup
 unset GPG_NAME
 unset SONATYPE_USERNAME

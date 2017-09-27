@@ -63,6 +63,9 @@ objects:
           volumeMounts:
           - mountPath: /sonatype-work
             name: nexus-volume
+          - mountPath: /usr/local/share/nexus.xml
+            name: nexus-config-volume
+            subPath: nexus.xml.file
           readinessProbe:
             httpGet:
               port: 8081
@@ -76,6 +79,9 @@ objects:
         - name: nexus-volume
           persistentVolumeClaim:
             claimName: nexus-volume
+        - name: nexus-config-volume
+          configMap:
+            name: nexus-config-map
     test: false
     triggers:
     - type: ConfigChange
