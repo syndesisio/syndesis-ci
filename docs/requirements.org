@@ -1,0 +1,78 @@
+#+TITLE:       Syndesis CI requirements
+#+AUTHOR:      Ioannis Canellos
+#+DATE:        05/10/2017
+#+EMAIL:       iocanel@gmail.com
+#+LANGUAGE:    en
+
+* Requirements
+** Git Workflow
+*** Pull Request
+   + trigger jobs on pull request
+   + re-triggering on update
+   + re-triggering using a phrase
+*** Merge
+   + support merging a pull request using a comment / label.
+*** Release
+   + release maven artifacts
+   + release docker images
+   + npm (?)
+   + handle git tags
+   + promote to production.
+** Building
+*** Integrate with hipster build tools
+    + Basel
+    + Buck
+** Testing
+*** End to end testing
+    What we actually need is to be able to spin up test environments (preferably ephemeral) and be able to know when they are ready so that we can bootstrap out test suite.
+**** Cube-like features
+**** Polyglot
+     Our existing end to end tests are written in somethingscirpt.
+** Deployment
+*** Auto Stage
+   + automatically stage changes upon merge
+   + deploy snapshots and latest (?)
+
+
+* Limitations
+** Circle CI
+   We need to check if there are considerations, of setting up access tokens to our environments.
+*** 1 concurrent build (per project? per organization?).
+*** 1500 minutes testing minutes per month.
+
+* Proposals
+** Move to CircleCI
+   We ditch all things Jenkins and we keep CircleCI as our only CI environment.
+   At the moment it does pull request validation and can also publish images and do roll outs (needs some coordination there).
+   What needs to be done is find a way to orchestrate end to end tests.
+*** Pros
+**** Provided as a service (we don't manage it ourselves)
+**** External
+***** Has access to Docker daemon
+***** Connects to Openshift as cluster admin
+*** Cons
+***** The free tier is limited
+***** Vendor lock
+***** Sharing sensitive information (keys etc) with an external service.
+***** Orchestrating end to end tests, needs to be implemented from scratch.
+** Keep Jenkins
+   We keep Jenkins and try to improve on what we already have.
+*** Pros
+**** Flexible
+**** Well-known
+*** Cons
+**** A lot of moving parts
+***** Adds to the learning curve
+***** Large surface area, more prone to bugs
+**** Being inside Openshift
+***** Issues with sharing volumes
+***** Service Accounts are somehow harder to reason that plain users
+** Simplify Jenkins
+   We revisit our setup trying to reduce the moving parts. We have the freedom to sacrifice things that are not that important to gain simplicity.
+*** Examples:
+**** Move outside of Openshift
+     Connect to Openshift externally as a cluster-admin to eliminate security pampering.
+**** Don't provision dynamically agents
+     Use a pool of fat containers and form a swarm to reduce our moving parts.
+**** Don't use agents at all.
+     That's maybe too much, but if we can live with one concurrent build that CircleCI offers, then why not?
