@@ -31,6 +31,9 @@ ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
 KUBERNETES_NAMESPACE=$(oc project -q) \
 OPENSHIFT_MASTER=$(oc whoami --show-server) | oc create -f - \
 
+#Install maven build config
+oc create -f m2-bc.yml
+
 #Install Nexus
 oc create -f nexus-persistent.yml
 oc process nexus \
