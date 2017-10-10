@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: maven-with-repo
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: maven-with-repo:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    dockerfile: |-
+      FROM maven
+      RUN mkdir -p /usr/local/share/maven/repository/
+      COPY . /usr/local/share/maven/repository/
+      chmod -R 775 /usr/local/share/maven/repository/
+    type: Dockerfile
+  strategy:
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: maven:3.5.0
+    type: Docker

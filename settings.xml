@@ -32,7 +32,7 @@
       <id>nexus-central</id>
       <name>Nexus Central Mirror</name>
       <url>http://nexus:8081/content/groups/public</url>
-      <mirrorOf>*</mirrorOf>
+      <mirrorOf>external:*</mirrorOf>
     </mirror>
   </mirrors>
 
@@ -46,6 +46,20 @@
         <gpg.keyname>${GPG_NAME}</gpg.keyname>
         <gpg.passphrase></gpg.passphrase>
       </properties>
+      <repositories>
+        <repository>
+          <id>image-repo</id>
+          <name>Maven repository optionally shipped with the docker image</name>
+	        <url>file:///usr/local/share/maven/repository</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>image-plugin-repo</id>
+          <name>Maven repository optionally shipped with the docker image</name>
+	        <url>file:///usr/local/share/maven/repository</url>
+        </pluginRepository>
+      </pluginRepositories>
     </profile>
   </profiles>
 
