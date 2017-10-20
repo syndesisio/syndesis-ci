@@ -15,10 +15,19 @@
 # - sonatype/syndesisci/username
 # - sonatype/syndesisci/password
 
+NAMESPACE=$(oc project -q)
+FLAVOR=${1:-"persistent"}
+HOSTNAME_SUFFIX=${2-"-"$NAMESPACE}
+DOMAIN=${3:-"b6ff.rh-idev.openshiftapps.com"}
 
-oc create -f jenkins-pvc.yml
-oc create -f nexus-pvc.yml
-oc create -f jenkins-persistent.yml
+JENKINS_HOSTNAME="jenkins$HOSTNAME_SUFFIX.$DOMAIN"
+echo "Installing Jenkins at $JENKINS_HOSTNAME using $FLAVOR templates."
+if [ "$FLAVOR" == "persistent" ];then
+ oc create -f jenkins-pvc.yml
+ oc create -f nexus-pvc.yml
+fi
+
+oc create -f jenkins-${FLAVOR}.yml
 
 #Install Jenkins
 oc process jenkins \
@@ -27,17 +36,19 @@ GITHUB_PASSWORD=$(pass show github/syndesisci/password) \
 GITHUB_ACCESS_TOKEN=$(pass show github/syndesisci/access_token) \
 GITHUB_OAUTH_CLIENT_ID=$(pass show github/syndesisci/client_id) \
 GITHUB_OAUTH_CLIENT_SECRET=$(pass show github/syndesisci/secret) \
-ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
-KUBERNETES_NAMESPACE=$(oc project -q) \
+ROUTE_HOSTNAME=jenkins$HOSTNAME_SUFFIX.$DOMAIN \
+KUBERNETES_NAMESPACE=$NAMESPACE \
 OPENSHIFT_MASTER=$(oc whoami --show-server) | oc create -f - \
 
 #Install maven build config
 oc create -f m2-bc.yml
 
 #Install Nexus
-oc create -f nexus-persistent.yml
+NEXUS_HOSTNAME="nexus$HOSTNAME_SUFFIX.$DOMAIN"
+echo "Installing Nexus at $NEXUS_HOSTNAME using $FLAVOR templates."
+oc create -f nexus-${FLAVOR}.yml
 oc process nexus \
-ROUTE_HOSTNAME=nexus-$(oc project -q).b6ff.rh-idev.openshiftapps.com | oc create -f -
+ROUTE_HOSTNAME=$NEXUS_HOSTNAME | oc create -f -
 
 
 TMP_KEY_DIR=`mktemp -d`
@@ -51,7 +62,7 @@ gpg --export-secret-key ${GPG_ID} > $TMP_KEY_DIR/gpg-keys/private.key
 oc create secret generic gpg-keys --from-file=$TMP_KEY_DIR/gpg-keys/public.key --from-file=$TMP_KEY_DIR/gpg-keys/private.key
 
 #Let's import everything into the tmp .gnupg so that we can make a secret out of it.
-#gpg --homedir=$TMP_KEY_DIR --import $TMP_KEY_DIR/.gnupg/public.key 
+#gpg --homedir=$TMP_KEY_DIR --import $TMP_KEY_DIR/.gnupg/public.key
 #gpg --homedir=$TMP_KEY_DIR --import $TMP_KEY_DIR/.gnupg/private.key
 #rm -rf  $TMP_KEY_DIR/.gnupg/public.key  $TMP_KEY_DIR/.gnupg/private.key
 
