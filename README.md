@@ -1,6 +1,22 @@
-# IPaaS CI
+# Syndesis CI
 
-Provides an Openshift Template for Jenkins and nexus.
+Provides a monorepo for the Syndesis CI.
+
+## Building
+
+In order to build everything from source:
+
+    ./bin/build.sh
+    
+This command will build the following modules:
+
+- plugins
+- agentimages
+- images 
+
+To resume the build from a particular module, without rebuilding the previous ones:
+
+    ./bin/build.sh --resume-from agentimages
 
 ## Installation
 
@@ -11,7 +27,25 @@ Currently there are two flavors provided:
 
 ### Ephemeral installation
 
-For Jenkins:
+Using the install script:
+
+    ./bin/install.sh --flavor ephemeral 
+    
+Other options you can pass to the command:
+
+- --clean: Cleans up before installing.
+- --domain: The domain to use for routes.
+- --host-suffix: The host suffix to use for routes.
+- --version: The ci version to use.
+    
+Note: The installer script assumes the use following:
+- [pass](https://pasword-store.org) is used for password management.    
+- ssh keys for syndesis exist under ~/.ssh/syndesisci_id_rsa and ~/.ssh/syndesisci_id_rsa.pub.
+- gpg keys for rhipaasuser@gmail.com are locally installed.
+
+#### Manually
+
+##### Jenkins
 
      oc create -f jenkins-ephemeral.yml
      oc process jenkins \
@@ -21,16 +55,23 @@ For Jenkins:
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
      KUBERNETES_NAMESPACE=$(oc project -q) | oc create -f -
 
-
-For nexus:
+##### Nexus
 
      oc create -f nexus-ephemeral.yml
      oc process nexus \
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com | oc create -f -
 
+    oc create secret generic m2-settings --from-file settings.xml
+
 ### Persistent installation
 
-For Jenkins:
+#### Using the install script
+
+    ./bin/install.sh      
+
+#### Manually
+
+##### Jenkins
 
      oc create -f jenkins-pvc.yml
      oc create -f jenkins-persistent.yml
@@ -43,16 +84,11 @@ For Jenkins:
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
      KUBERNETES_NAMESPACE=$(oc project -q) | oc create -f -
 
-For nexus:
+##### Nexus
 
      oc create -f nexus-pvc.yml
      oc create -f nexus-persistent.yml
      oc process nexus \
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com | oc create -f -
      
-     
-For maven builds to use nexus as a mirror, you need to use the appropriate `settings.xml` file.
-A secret providing such a file can be created using:
-
     oc create secret generic m2-settings --from-file settings.xml
-

@@ -1,0 +1,18 @@
+[submodule "images/syndesis-jenkins"]
+	path = images/syndesis-jenkins
+	url = https://github.com/syndesisio/syndesis-jenkins.git
+[submodule "plugins/kubernetes-plugin"]
+	path = plugins/kubernetes-plugin
+	url = https://github.com/syndesisio/kubernetes-plugin.git
+[submodule "plugins/kubernetes-pipeline-plugin"]
+	path = plugins/kubernetes-pipeline-plugin
+	url = https://github.com/syndesisio/kubernetes-pipeline-plugin.git
+[submodule "plugins/durable-task-plugin"]
+	path = plugins/durable-task-plugin
+	url = https://github.com/syndesisio/durable-task-plugin.git
+[submodule "images/openshift-jenkins"]
+	path = images/openshift-jenkins
+	url = https://github.com/syndesisio/openshift-jenkins.git
+[submodule "plugins/workflow-cps-global-lib-plugin"]
+	path = plugins/workflow-cps-global-lib-plugin
+	url = git@github.com:syndesisio/workflow-cps-global-lib-plugin.git

@@ -25,6 +25,9 @@ parameters:
 - name: GITHUB_OAUTH_CLIENT_SECRET
   description: The github oauth client secret.
   required: true
+- name: SYNDESIS_CI_VERSION
+  description: The version of syndesis CI to use.
+  value: latest
 objects:
 - apiVersion: v1
   kind: ServiceAccount
@@ -55,38 +58,14 @@ objects:
     labels:
       app: jenkins
     name: syndesis-jenkins
-  spec: {}
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    labels:
-      app: jenkins
-    name: syndesis-jenkins
   spec:
-    nodeSelector: null
-    output:
-      to:
-        kind: ImageStreamTag
-        name: syndesis-jenkins:latest
-    postCommit: {}
-    resources: {}
-    runPolicy: Serial
-    source:
-      git:
-        uri: https://github.com/syndesisio/syndesis-jenkins.git
-      type: Git
-    strategy:
-      sourceStrategy:
-        from:
-          kind: ImageStreamTag
-          name: jenkins-2-centos7:latest
-          forcePull: true
-      type: Source
-    triggers:
-    - github:
-        secret: secret101
-      type: GitHub
-    - type: ConfigChange
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: docker.io/syndesis/syndesis-jenkins:latest
+      importPolicy: {}
+      name: latest
 - apiVersion: v1
   kind: Secret
   metadata:
@@ -213,7 +192,7 @@ objects:
         - jenkins
         from:
           kind: ImageStreamTag
-          name: syndesis-jenkins:latest
+          name: syndesis-jenkins:${SYNDESIS_CI_VERSION}
           namespace: ${KUBERNETES_NAMESPACE}
       type: ImageChange
     - type: ConfigChange
