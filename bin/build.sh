@@ -8,9 +8,7 @@ set -e
 function displayHelp() {
   echo "This script helps you build the syndesis monorepo."
   echo "The available options are:"
-  echo " --skip-tests            Skips the test execution."
-  echo " --skip-image-builds     Skips image builds."
-  echo " --with-image-streams    Builds everything using image streams."
+  echo " --with-artifact-prefix  Specifies an prefix for artifacts"
   echo " --namespace N           Specifies the namespace to use."
   echo " --resume-from           Resume build from module."
   echo " --version V             Use an actual version instead of SNAPSHOT(s) and latest(s)."
@@ -56,6 +54,15 @@ function readopt() {
   done
 }
 
+#
+# Returns the first argument if not empty, the second otherwise
+function or() {
+  if [ -n "$1" ]; then
+    echo $1
+  else
+    echo $2
+  fi
+}
 # Copy plugin
 function copyplugin() {
   PLUGIN=$1
@@ -66,21 +73,25 @@ function copyplugin() {
   fi
 }
 
-function createbc() {
+function dockerbuild() {
   DOCKERFILE=$1
   IMAGESTREAM=$2
-  BUILD_CONFIG=`oc get bc | grep $IMAGESTREAM || echo ""`
+  NAME="$ARTIFACT_PREFIX$IMAGESTREAM"
+  BUILD_CONFIG=`oc get bc | grep $NAME || echo ""`
   if [ -z "$BUILD_CONFIG" ]; then
     echo "Creating Build Conifg: $IMAGESTREAM"
-    cat $DOCKERFILE | oc new-build --dockerfile=- --to=syndesis/$IMAGESTREAM:latest --strategy=docker || true
+    cat $DOCKERFILE | oc new-build --name=$NAME --dockerfile=- --to=syndesis/$IMAGESTREAM:$VERSION --strategy=docker || true
 
     # Verify that the build config has been created.
-    BUILD_CONFIG=`oc get bc | grep $IMAGESTREAM || echo ""`
+    BUILD_CONFIG=`oc get bc | grep $NAME || echo ""`
     if [ -z "$BUILD_CONFIG" ]; then
-      echo "Failed to create Build Config: $IMAGESTREAM"
+      echo "Failed to create Build Config: $NAME"
       exit 1
     fi
   fi
+
+  tar -cvf archive.tar .
+  oc start-build $NAME --from-archive=archive.tar --follow
 }
 
 function istag2docker() {
@@ -93,9 +104,7 @@ function images() {
 
   # Openshift Jenkins
   pushd openshift-jenkins/2
-  createbc Dockerfile openshift-jenkins
-  tar -cvf archive.tar .
-  oc start-build openshift-jenkins --from-archive=archive.tar --follow
+  dockerbuild Dockerfile openshift-jenkins
   popd
 
   # Syndesis Jenkins
@@ -121,21 +130,15 @@ function agentimages() {
   #
   # Jenkins Agents
   pushd slave-base
-  createbc Dockerfile jenkins-slave-base-centos7
-  tar -cvf archive.tar .
-  oc start-build jenkins-slave-base-centos7 --from-archive=archive.tar --follow
+  dockerbuild Dockerfile jenkins-slave-base-centos7
   popd
 
   pushd slave-nodejs
-  createbc Dockerfile jenkins-slave-nodejs-centos7
-  tar -cvf archive.tar .
-  oc start-build jenkins-slave-nodejs-centos7 --from-archive=archive.tar --follow
+  dockerbuild Dockerfile jenkins-slave-nodejs-centos7
   popd
 
   pushd slave-maven
-  createbc Dockerfile jenkins-slave-maven-centos7
-  tar -cvf archive.tar .
-  oc start-build jenkins-slave-maven-centos7 --from-archive=archive.tar --follow
+  dockerbuild Dockerfile jenkins-slave-maven-centos7
   popd
 
   popd
@@ -176,13 +179,10 @@ function modules_to_build() {
 
 #
 # Options and flags
-SKIP_TESTS=$(hasflag --skip-tests "$@" 2> /dev/null)
-SKIP_IMAGE_BUILDS=$(hasflag --skip-image-builds "$@" 2> /dev/null)
 CLEAN=$(hasflag --clean "$@" 2> /dev/null)
-WITH_IMAGE_STREAMS=$(hasflag --with-image-streams "$@" 2> /dev/null)
-
+ARTIFACT_PREFIX=$(readopt --artifact-prefix "$@" 2> /dev/null)
 NAMESPACE=$(readopt --namespace "$@" 2> /dev/null)
-
+VERSION=$(or $(readopt --version "$@" 2> /dev/null) "latest")
 RESUME_FROM=$(readopt --resume-from "$@" 2> /dev/null)
 HELP=$(hasflag --help "$@" 2> /dev/null)
 
