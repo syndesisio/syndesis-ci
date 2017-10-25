@@ -15,10 +15,10 @@
 	url = https://github.com/syndesisio/openshift-jenkins.git
 [submodule "plugins/workflow-cps-global-lib-plugin"]
 	path = plugins/workflow-cps-global-lib-plugin
-	url = git@github.com:syndesisio/workflow-cps-global-lib-plugin.git
+	url = https://github.com/syndesisio/workflow-cps-global-lib-plugin.git
 [submodule "syndesis-pipeline-library"]
 	path = pipeline-library
-	url = git@github.com:syndesisio/syndesis-pipeline-library.git
+	url = https://github.com/syndesisio/syndesis-pipeline-library.git
 [submodule "syndesis-system-tests"]
 	path = system-tests
-	url = git@github.com:syndesisio/syndesis-system-tests.git
+	url = https://github.com/syndesisio/syndesis-system-tests.git

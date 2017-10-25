@@ -77,13 +77,13 @@ function dockerbuild() {
   DOCKERFILE=$1
   IMAGESTREAM=$2
   NAME="$ARTIFACT_PREFIX$IMAGESTREAM"
-  BUILD_CONFIG=`oc get bc | grep $NAME || echo ""`
+  BUILD_CONFIG=`oc get bc $OC_OPTS | grep $NAME || echo ""`
   if [ -z "$BUILD_CONFIG" ]; then
-    echo "Creating Build Conifg: $IMAGESTREAM"
-    cat $DOCKERFILE | oc new-build --name=$NAME --dockerfile=- --to=syndesis/$IMAGESTREAM:$VERSION --strategy=docker || true
+    echo "Creating Build Conifg: $NAME"
+    cat $DOCKERFILE | oc new-build --name=$NAME --dockerfile=- --to=syndesis/$NAME:$VERSION --strategy=docker $OC_OPTS || true
 
     # Verify that the build config has been created.
-    BUILD_CONFIG=`oc get bc | grep $NAME || echo ""`
+    BUILD_CONFIG=`oc get bc $OC_OPTS | grep $NAME || echo ""`
     if [ -z "$BUILD_CONFIG" ]; then
       echo "Failed to create Build Config: $NAME"
       exit 1
@@ -91,12 +91,12 @@ function dockerbuild() {
   fi
 
   tar -cvf archive.tar .
-  oc start-build $NAME --from-archive=archive.tar --follow
+  oc start-build $NAME $OC_OPTS --from-archive=archive.tar --follow
 }
 
 function istag2docker() {
   ISTAG=$1
-  oc get istag | grep $ISTAG | awk -F " " '{print $2}'
+  oc get istag $OC_OPTS | grep $ISTAG | awk -F " " '{print $2}'
 }
 
 function images() {
@@ -116,9 +116,9 @@ function images() {
   # This is a multimodule project so it does get a little bit more complicated
   copyplugin kubernetes-pipeline-arquillian-steps ../../plugins/kubernetes-pipeline-plugin/arquillian-steps/target/
   OPENSHIFT_JENKINS_DOCKER_IMAGE=$(istag2docker openshift-jenkins)
-  oc new-build --binary=true --docker-image=$OPENSHIFT_JENKINS_DOCKER_IMAGE --to=syndesis/syndesis-jenkins:latest --strategy=source || true
+  oc new-build --binary=true --docker-image=$OPENSHIFT_JENKINS_DOCKER_IMAGE --to=syndesis/syndesis-jenkins:latest --strategy=source $OC_OPTS || true
   tar -cvf archive.tar bin configuration plugins plugins.txt
-  oc start-build syndesis-jenkins --from-archive=archive.tar --follow
+  oc start-build syndesis-jenkins $OC_OPTS --from-archive=archive.tar --follow
   popd
 
   popd
@@ -179,6 +179,7 @@ function modules_to_build() {
 
 #
 # Options and flags
+SKIP_TESTS=$(hasflag --skip-tests "$@" 2> /dev/null)
 CLEAN=$(hasflag --clean "$@" 2> /dev/null)
 ARTIFACT_PREFIX=$(readopt --artifact-prefix "$@" 2> /dev/null)
 NAMESPACE=$(readopt --namespace "$@" 2> /dev/null)
