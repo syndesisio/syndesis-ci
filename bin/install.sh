@@ -22,11 +22,13 @@ ARGS="$@"
 function displayHelp() {
     echo "This script helps you build the syndesis monorepo."
     echo "The available options are:"
-    echo " --domain D              Specifies the domain to use for setting up routes."
-    echo " --host-suffix           Specifies the host suffix for setting up routes."
-    echo " --namespace N           Specifies the namespace to use."
-    echo " --version V             Specifies the version of the templates."
-    echo " --help                  Displays this help message."
+    echo " --skip-maven-settings    Skips maven settings."
+    echo " --skip-release-settings  Skips release settings (gpg & ssh)."
+    echo " --domain D               Specifies the domain to use for setting up routes."
+    echo " --host-suffix            Specifies the host suffix for setting up routes."
+    echo " --namespace N            Specifies the namespace to use."
+    echo " --version V              Specifies the version of the templates."
+    echo " --help                   Displays this help message."
 }
 
 #
@@ -106,6 +108,9 @@ function install_jenkins() {
 
   oc create -f jenkins-${FLAVOR}.yml
   process_jenkins | oc create -f -
+
+
+  oc adm policy add-cluster-role-to-user self-provisioner system:serviceaccount:syndesis-ci:jenkins
   popd
 }
 function process_nexus() {
@@ -252,6 +257,9 @@ FLAVOR=$(or $(readopt --flavor $ARGS 2> /dev/null) "persistent")
 VERSION=$(or $(readopt --version $ARGS 2> /dev/null) "latest")
 HOSTNAME_SUFFIX=$(or $(readopt --flavor $ARGS 2> /dev/null) "-$NAMESPACE")
 DOMAIN=$(or $(readopt --domain $ARGS 2> /dev/null) "b6ff.rh-idev.openshiftapps.com")
+
+SKIP_MAVEN_SETTINGS=$(hasflag --skip-maven-settings $ARGS 2> /dev/null)
+SKIP_RELEASE_SETTINGS=$(hasflag --skip-release-settings $ARGS 2> /dev/null)
 
 GITHUB_USERNAME=$(or $(readopt --github-username $ARGS 2> /dev/null) "syndesisci")
 GITHUB_PASSWORD=$(or $(readopt --github-password $ARGS 2> /dev/null) $(pass show github/syndesisci/password))

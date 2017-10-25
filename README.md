@@ -54,6 +54,11 @@ Note: The installer script assumes the use following:
      GITHUB_ACCESS_TOKEN=<github access token password> \
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
      KUBERNETES_NAMESPACE=$(oc project -q) | oc create -f -
+     
+and to allow the jenkins service account to provision new projects:
+
+    oc adm policy add-cluster-role-to-user self-provisioner system:serviceaccount:$(oc project -q):jenkins
+
 
 ##### Nexus
 
@@ -83,6 +88,10 @@ Note: The installer script assumes the use following:
      GITHUB_OAUTH_CLIENT_SECRET=<github oauth client secret> \
      ROUTE_HOSTNAME=jenkins-$(oc project -q).b6ff.rh-idev.openshiftapps.com \
      KUBERNETES_NAMESPACE=$(oc project -q) | oc create -f -
+
+and to allow the jenkins service account to provision new projects:
+
+    oc adm policy add-cluster-role-to-user self-provisioner system:serviceaccount:$(oc project -q):jenkins
 
 ##### Nexus
 

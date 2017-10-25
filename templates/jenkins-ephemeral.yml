@@ -255,13 +255,3 @@ objects:
   subjects:
   - kind: ServiceAccount
     name: jenkins
-- apiVersion: v1
-  kind: ClusterRoleBinding
-  metadata:
-    name: syndesis:provisioner
-  roleRef:
-    name: self-provisioner
-  subjects:
-  - kind: ServiceAccount
-    namespace: ${KUBERNETES_NAMESPACE}
-    name: jenkins
