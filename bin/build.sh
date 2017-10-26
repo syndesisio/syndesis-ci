@@ -169,8 +169,14 @@ function plugins() {
   popd
 }
 
+function tools() {
+  pushd images/nsswrapper-glibc
+  dockerbuild Dockerfile nsswrapper-glibc
+  popd
+}
+
 function modules_to_build() {
-  modules="plugins agentimages images"
+  modules="plugins agentimages images tools"
   if [ "x${RF}" != x ]; then
     modules=$(echo $modules | sed -e "s/^.*$RF/$RF/")
   fi
