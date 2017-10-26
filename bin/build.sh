@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 
 # Exit if any error occurs
 set -e
@@ -115,10 +115,10 @@ function images() {
   copyplugin workflow-cps-global-lib
   # This is a multimodule project so it does get a little bit more complicated
   copyplugin kubernetes-pipeline-arquillian-steps ../../plugins/kubernetes-pipeline-plugin/arquillian-steps/target/
-  OPENSHIFT_JENKINS_DOCKER_IMAGE=$(istag2docker openshift-jenkins)
-  oc new-build --binary=true --docker-image=$OPENSHIFT_JENKINS_DOCKER_IMAGE --to=syndesis/syndesis-jenkins:latest --strategy=source $OC_OPTS || true
+  OPENSHIFT_JENKINS_DOCKER_IMAGE=$(istag2docker "${ARTIFACT_PREFIX}openshift-jenkins")
+  oc new-build --name ${ARTIFACT_PREFIX}syndesis-jenkins --binary=true --docker-image=$OPENSHIFT_JENKINS_DOCKER_IMAGE --to=syndesis/${ARTIFACT_PREFIX}syndesis-jenkins:latest --strategy=source $OC_OPTS || true
   tar -cvf archive.tar bin configuration plugins plugins.txt
-  oc start-build syndesis-jenkins $OC_OPTS --from-archive=archive.tar --follow
+  oc start-build ${ARTIFACT_PREFIX}syndesis-jenkins $OC_OPTS --from-archive=archive.tar --follow
   popd
 
   popd
@@ -230,8 +230,8 @@ else
   MAVEN_OPTS="$MAVEN_OPTS -Dfabric8.mode=kubernetes"
 fi
 
-git submodule init
-git submodule update
+#git submodule init
+#git submodule update
 
 for module in $(modules_to_build)
 do

@@ -30,19 +30,24 @@
 
 *** CI/CD related sources
 
-    +  https://github.com/syndesisio/syndesis-jenkins (our custom [[jenkins image]], with the plugins of our choice and our job defintions & more)
-    +  https://github.com/syndesisio/syndesis-ci (the project that contains ci related Openshift manifests. Includes deployment configs, services, secrets & installation scripts)
-    +  https://github.com/syndesisio/syndesis-pipeline-librarsuv 2017 1600 ccy (a jenkins pipeline library specific to syndesis)
-    +  https://github.com/syndesisio/nsswrapper (a container that initializes the nsswrapper, and use useful in our build pods as init container, more later)
+    - https://github.com/syndesisio/syndesis-ci (the ci mono repo)
 
-*** CI/CD related forks
+The monorepo includes ci related components and forks.
+
+**** CI/CD related components
+
+    - https://github.com/syndesisio/syndesis-jenkins (our custom [[jenkins image]], with the plugins of our choice and our job defintions & more)
+    - https://github.com/syndesisio/syndesis-pipeline-library (a jenkins pipeline library specific to syndesis)
+    - https://github.com/syndesisio/nsswrapper-glibc (a container that initializes the nsswrapper, and use useful in our build pods as init container, more later)
+
+**** CI/CD related forks
 
     We often hit the limits of the tools we use and we need to trail blaze, that's why we have maintain forks for the following projects:
 
     + https://github.com/syndesisio/kubernetes-plugin
     + https://github.com/syndesisio/kubernetes-pipeline-plugin (we can possibly remove)
-    + https://github.com/syndesisio/arquillian-cube (we can possibly now remove)
-    + https://github.com/iocanel/workflow-cps-global-lib-plugin
+    + https://github.com/syndesisio/workflow-cps-global-lib-plugin
+    + https://github.com/syndesisio/durable-task-plugin
 
 * goals
 
@@ -136,6 +141,8 @@
 
    Pipelines read like groovy and that is both good and bad at the same time. It's good because its easy to understand, its bad because it doesn't execute like groovy and that is a often a source of unpleasant surprises.
 
+   Also pipelines, require a Jenkins installation and that makes it a bit harder to develop (compared to something like make or shell scripts).
+
 *** mixed execution environments
 
     Each statement (will call them step from now on) inside a groovy pipeline can be possilby executed in three different envionements, dependings on the implemenation and context:
@@ -197,7 +204,7 @@
   This section describes the current implementation.
   It start's by the documenting the Openshift templates, and then takes items defined in the templates piece by piece...
 ** syndesis ci project
-   The syndesis ci project lives at https://github.com/syndesisio/syndesis-ci and it contains Openshif templates, configuration files and scripts to install everything from scratch.
+   The syndesis ci project lives at https://github.com/syndesisio/syndesis-ci and it contains images, templates, configuration files and scripts to build and install everything from scratch.
 
    Due to the recurring issues with pvc timeouts, we have two flavours of the templates:
    + ephemeral
@@ -220,7 +227,7 @@
 
 ** <<jenkins image>>jenkins image
 
-   Our custom jenkins image lives at: https://github.com/syndesisio/syndesis-jenkins and its based on: https://github.com/openshift/jenkins.
+   Our custom jenkins image lives at: https://github.com/syndesisio/syndesis-jenkins and its based on: https://github.com/openshift/jenkins which we have also forked at:  https://github.com/openshift/openshift-jenkins so that we can have more control over the version of tools it uses.
 
    From the parent image we get for free the following:
    + openshift oauth via https://github.com/openshift/jenkins-openshift-login-plugin
@@ -692,6 +699,105 @@
     At the moment we are using the fabric8/nexus image hosted at: https://github.com/fabric8io/nexus-docker.
     Nexus is yet another case that is affected by [[arbitrary user ids]]. For this reason the nsswrapper is baked into the image.
     Also, this image has baked the configuration inside it. However we override it by mounting a custom [[https://github.com/syndesisio/syndesis-ci/blob/master/nexus.xml][nexus.xml]] at `/sonatype-work/conf`.
+
+* building
+  In order to build everything a build script is provided at: `bin/build.sh`.
+
+  The script will start by building:
+
+  - custom jenkins plugins:
+    - kubernetes-plugin
+    - kubernetes-pipeline-plugin
+    - durable-task-plugin
+    - workflow-cps-global-lib-plugin
+  - slave images
+    - slave-base
+    - slave-agent
+    - slave-nodejs
+  - images
+    - openshift jenkins image (customized image for s2i use)
+    - syndesis jenkins image
+
+  The script can be used like:
+
+  #+BEGIN_SRC sh
+  ./bin/build.sh
+  #+END_SRC
+
+  The script accepts the following flags:
+
+  +----------+------------------------------------------------------+
+  | Flag     | Description                                          |
+  +----------+------------------------------------------------------+
+  | --clean  | Specifies the namespace to use                       |
+  | --help   | Displays a use message                               |
+  +----------+------------------------------------------------------+
+
+  It can also be parameterized using the following parameters:
+
+  +-------------------+------------------------------------------------------+
+  | Parameter         | Description                                          |
+  +-------------------+------------------------------------------------------+
+  | --namespace       | The namespace to build images into                   |
+  | --resume-from     | Resume build from modules (agentimages, images)      |
+  | --version         | The version of the artifacts to build                |
+  | --artifact-prefix | The artifact prefix (to prevent clashes)             |
+  +--------------------------------------------------------------------------+
+
+* installing
+
+  In a similar manner the repo also contains an installation script, that can be used to install:
+
+  - jenkins
+  - nexus
+  - build tooling configuration
+    - maven settings.xml
+  - release tooling configuration
+    - ssh keys
+    - gpg keys
+
+  #+BEGIN_SRC sh
+  ./bin/install.sh
+  #+END_SRC
+
+  The script accepts the following flags:
+
+  +----------+------------------------------------------------------+
+  | Flag     | Description                                          |
+  +----------+------------------------------------------------------+
+  | --clean  | Specifies the namespace to use                       |
+  | --help   | Displays a use message                               |
+  +----------+------------------------------------------------------+
+
+  It can also be parameterized using the following parameters:
+
+  +-------------------------+------------------------------------------------------+
+  | Parameter               | Description                                          |
+  +-------------------------+------------------------------------------------------+
+  | --namespace             | The namespace to install CI into                     |
+  | --version               | The version of the artifacts to build                |
+  | --domain                | The domain to use for creating routes                |
+  | --host-suffix           | A suffix to append in the route host name            |
+  | --skip-maven-settings   | Don't install the maven settings                     |
+  | --skip-release-settings | Don't install the release settings                   |
+  +-------------------------+------------------------------------------------------+
+
+  A special category of parameters that is related to passing sensitive information:
+
+  +-------------------------+-----------------------------------------------+
+  | Parameter               | Description                                   |
+  +-------------------------+-----------------------------------------------+
+  | --github-username       | The github username                           |
+  | --github-password       | The github password                           |
+  | --github-access-token   | The github access token                       |
+  | --github-client-id      | The github client id                          |
+  | --github-client-secret  | The github client secret                      |
+  | --sonatype-username     | The sonatype username                         |
+  | --sonatype-password     | The sonatype password                         |
+  | --dockerhub-username    | The dockerhub username                        |
+  | --dockerhub-email       | The dockerhub email                           |
+  | --dockerhub-password    | The dockerhub password                        |
+  +-------------------------+-----------------------------------------------+
 
 * future work
 
