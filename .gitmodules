@@ -24,4 +24,4 @@
 	url = https://github.com/syndesisio/syndesis-system-tests.git
 [submodule "images/nsswrapper-glibc"]
 	path = images/nsswrapper-glibc
-	url = git@github.com:syndesisio/nsswrapper-glibc.git
+	url = https://github.com/syndesisio/nsswrapper-glibc.git
