@@ -110,7 +110,7 @@ function dockerbuild() {
     cp $DOCKERFILE  ${DOCKERFILE}.original
     from=$(fromimagename $DOCKERFILE)
     echo "Replace image FROM: $from with $from:$BUILDER_TAG"
-    sed -E "s|FROM ([a-zA-Z0-9\.\/:]+)|FROM ${from}:${BUILDER_TAG}|g" $DOCKERFILE > ${DOCKERFILE}.${BUILDER_TAG}
+    sed -E "s|FROM ([a-zA-Z0-9\.\/\:]+)|FROM ${from}:${BUILDER_TAG}|g" $DOCKERFILE > ${DOCKERFILE}.${BUILDER_TAG}
     cp ${DOCKERFILE}.${BUILDER_TAG} $DOCKERFILE
   fi
 
@@ -241,13 +241,17 @@ function agentimages() {
   popd
 
   pushd slave-nodejs
-  dockerbuild Dockerfile jenkins-slave-nodejs-centos7 jenkins-slave-base-centos7 $VERSION
+  dockerbuild Dockerfile jenkins-slave-nodejs-centos7 ${ARTIFACT_PREFIX}jenkins-slave-base-centos7 $VERSION
   popd
 
   pushd slave-maven
-  dockerbuild Dockerfile jenkins-slave-maven-centos7 jenkins-slave-base-centos7 $VERSION
+  dockerbuild Dockerfile jenkins-slave-maven-centos7 ${ARTIFACT_PREFIX}jenkins-slave-base-centos7 $VERSION
   popd
 
+  popd
+
+  pushd images/jenkins-slave-full-centos7
+  dockerbuild Dockerfile jenkins-slave-full-centos7 ${ARTIFACT_PREFIX}jenkins-slave-maven-centos7 $VERSION
   popd
 }
 
@@ -318,8 +322,8 @@ else
   MAVEN_OPTS="$MAVEN_OPTS -Dfabric8.mode=kubernetes"
 fi
 
-#git submodule init
-#git submodule update
+git submodule init
+git submodule update
 
 for module in $(modules_to_build)
 do
