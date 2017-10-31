@@ -110,7 +110,7 @@ function dockerbuild() {
     cp $DOCKERFILE  ${DOCKERFILE}.original
     from=$(fromimagename $DOCKERFILE)
     echo "Replace image FROM: $from with $from:$BUILDER_TAG"
-    sed -E "s|FROM ([a-zA-Z0-9\.\/:]+)|FROM ${from}:${BUILDER_TAG}|g" $DOCKERFILE > ${DOCKERFILE}.${BUILDER_TAG}
+    sed -E "s|FROM ([a-zA-Z0-9\.\/\:]+)|FROM ${from}:${BUILDER_TAG}|g" $DOCKERFILE > ${DOCKERFILE}.${BUILDER_TAG}
     cp ${DOCKERFILE}.${BUILDER_TAG} $DOCKERFILE
   fi
 

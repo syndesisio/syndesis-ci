@@ -1,4 +1,4 @@
-FROM openshift/jenkins-slave-maven-centos7
+FROM openshift/jenkins-slave-maven-centos7:latest-slave-maven-centos7:latest
 
 ENV NODEJS_VERSION=4.4 \
     NPM_CONFIG_PREFIX=$HOME/.npm-global \
@@ -6,6 +6,8 @@ ENV NODEJS_VERSION=4.4 \
     BASH_ENV=/usr/local/bin/scl_enable \
     ENV=/usr/local/bin/scl_enable \
     PROMPT_COMMAND=". /usr/local/bin/scl_enable"
+
+USER root
 
 COPY contrib/bin/scl_enable /usr/local/bin/scl_enable
 
@@ -22,11 +24,9 @@ COPY contrib/google-chrome.repo /etc/yum.repos.d/google-chrome.repo
 
 # Install Yarn and Xvfb
 RUN curl https://dl.yarnpkg.com/rpm/yarn.repo > /etc/yum.repos.d/yarn.repo && \
-    curl --silent --location https://rpm.nodesource.com/setup_8.x | bash - && \
-    yum install -y google-chrome-stable xorg-x11-server-Xvfb liberation-mono-fonts liberation-narrow-fonts liberation-sans-fonts liberation-serif-fonts yarn nodejs gcc-c++ make && \
+    yum install -y google-chrome-stable xorg-x11-server-Xvfb liberation-mono-fonts liberation-narrow-fonts liberation-sans-fonts liberation-serif-fonts yarn gcc-c++ make && \
     mkdir /.cache /.config && chmod 777 /.cache /.config && \
     dbus-uuidgen > /etc/machine-id
-
 
 RUN chown -R 1001:0 $HOME && \
     chmod -R g+rw $HOME
