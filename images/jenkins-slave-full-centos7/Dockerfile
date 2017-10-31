@@ -1,4 +1,4 @@
-FROM openshift/jenkins-slave-maven-centos7:latest-slave-maven-centos7:latest
+FROM openshift/jenkins-slave-maven-centos7:1.0.1-slave-maven-centos7:1.0.1-slave-maven-centos7:latest-slave-maven-centos7:latest-slave-maven-centos7:latest
 
 ENV NODEJS_VERSION=4.4 \
     NPM_CONFIG_PREFIX=$HOME/.npm-global \

@@ -63,6 +63,26 @@ function or() {
     echo $2
   fi
 }
+
+function install_dockerhub_secret() {
+  if [ -n "$CLEAN" ]; then
+    oc delete secret dockerhub || true
+  fi
+  #Install dockerhub secret
+  if [ -z "$DOCKERHUB_USERNAME" ]; then
+    echo "Dockerhub username not found. Please specify using --dockerhub-username, or setup dockerhub/syndesisci/username on password store."
+  fi
+
+  if [ -z "$DOCKERHUB_EMAIL" ]; then
+    echo "Dockerhub email not found. Please specify using --dockerhub-email, or setup dockerhub/syndesisci/email on password store.."
+  fi
+
+  if [ -z "$DOCKERHUB_PASSWORD" ]; then
+    echo "Dockerhub password not found. Please specify using --dockerhub-password, or setup dockerhub/syndesisci/password on password store.."
+  fi
+  oc secrets new-dockercfg dockerhub --docker-server=https://index.docker.io/v1/ --docker-username=$DOCKERHUB_USERNAME --docker-password=$DOCKERHUB_PASSWORD --docker-email=$DOCKERHUB_EMAIL || true
+}
+
 # Copy plugin
 function copyplugin() {
   PLUGIN=$1
@@ -88,24 +108,29 @@ function mvnbuild() {
   mvn versions:set -DnewVersion=$version
 }
 
+#
+# Extract the image name from the FROM directive removing the tag (if present).
 fromimagename() {
   cat $1 | grep FROM | awk -F "[: ]" '{print $2}'
 }
 
-#
-# Perform a dockerbuild via build config.
-function dockerbuild() {
-  DOCKERFILE=$1
-  IMAGESTREAM=$2
-  BUILDER_IMAGESTREAM=$3
-  BUILDER_TAG=${4:-"latest"}
-  BC_OPTS=""
-  if [ -n "$BUILDER_IMAGESTREAM" ];then
-    echo "Using image stream: $BUILDER_IMAGESTREAM"
-    BC_OPTS=" --image-stream=$BUILDER_IMAGESTREAM:${BUILDER_TAG}"
+function removebc() {
+  local NAME=$1
+  BUILD_CONFIG=`oc get bc $OC_OPTS | grep $NAME || echo ""`
+  if [ -n "$BUILD_CONFIG" ]; then
+    # Build config contains a copy of the dockerfile, so we need to always recreate it.
+    echo "Removing Build Conifg: $NAME"
+    oc delete bc $NAME $OC_OPTS || true
   fi
+}
 
-  if [ -n "$BUILDER_TAG" ]; then
+#
+# Updates the specified Dockerfile by setting the specified tag in the FROM image.
+function setfromtag() {
+  local DOCKERFILE=$1
+  local BUILDER_TAG=$2
+
+  if [ -f $1 ] && [ -n "$2" ]; then
     echo "Using image stream tag: $BUILDER_TAG"
     cp $DOCKERFILE  ${DOCKERFILE}.original
     from=$(fromimagename $DOCKERFILE)
@@ -113,16 +138,34 @@ function dockerbuild() {
     sed -E "s|FROM ([a-zA-Z0-9\.\/\:]+)|FROM ${from}:${BUILDER_TAG}|g" $DOCKERFILE > ${DOCKERFILE}.${BUILDER_TAG}
     cp ${DOCKERFILE}.${BUILDER_TAG} $DOCKERFILE
   fi
+}
 
-  NAME="$ARTIFACT_PREFIX$IMAGESTREAM"
-  BUILD_CONFIG=`oc get bc $OC_OPTS | grep $NAME || echo ""`
-  if [ -n "$BUILD_CONFIG" ]; then
-    # Build config contains a copy of the dockerfile, so we need to always recreate it.
-    echo "Removing Build Conifg: $NAME"
-    oc delete bc $NAME $OC_OPTS
+#
+# Perform a dockerbuild via build config.
+function dockerbuild() {
+  local DOCKERFILE=$1
+  local IMAGESTREAM=$2
+  local BUILDER_IMAGESTREAM=$3
+  local BUILDER_TAG=${4:-"latest"}
+  local BC_OPTS=""
+  if [ -n "$BUILDER_IMAGESTREAM" ];then
+    echo "Using image stream: $BUILDER_IMAGESTREAM"
+    BC_OPTS=" --image-stream=$BUILDER_IMAGESTREAM:${BUILDER_TAG}"
   fi
+
+  setfromtag $DOCKERFILE $BUILDER_TAG
+  # Prepare the Build Config
+  NAME="$ARTIFACT_PREFIX$IMAGESTREAM"
+  removebc $NAME
+
   echo "Creating Build Conifg: $NAME"
-  cat $DOCKERFILE | oc new-build --name=$NAME --dockerfile=- --to=syndesis/$NAME:$VERSION --strategy=docker $BC_OPTS $OC_OPTS || true
+  if [ -f $DOCKERFILE ]; then
+    echo "Found dockerfile: $PWD/$DOCKERFILE"
+    cat $DOCKERFILE | oc new-build --name=$NAME --dockerfile=- --to=syndesis/$NAME:$VERSION --strategy=docker $BC_OPTS $OC_OPTS || true
+  else
+    echo "Dockerfile not found: $PWD/$DOCKERFILE"
+    oc new-build --name ${NAME} --binary=true --to=syndesis/${NAME}:${VERSION} --strategy=source $BC_OPTS $OC_OPTS || true
+  fi
 
   # Verify that the build config has been created.
   BUILD_CONFIG=`oc get bc $OC_OPTS | grep $NAME || echo ""`
@@ -135,8 +178,26 @@ function dockerbuild() {
     rm /tmp/archive.tar.gz
   fi
 
-  tar -czvf /tmp/archive.tar.gz . --exclude='.git'
+  tar --exclude='.git' -czvf /tmp/archive.tar.gz .
   oc start-build $NAME --from-archive=/tmp/archive.tar.gz $OC_OPTS --follow
+
+  echo $NAME
+  if [ -n "$RELEASE" ]; then
+    # Prepare the Release Build Config
+    local RELEASE_NAME="$ARTIFACT_PREFIX$IMAGESTREAM-release"
+    removebc $RELEASE_NAME
+
+    echo "Creating Release Build Conifg: $RELEASE_NAME"
+    if [ -f $DOCKERFILE ]; then
+      cat $DOCKERFILE | oc new-build --name=$RELEASE_NAME --dockerfile=- --to=docker.io/syndesis/$NAME:$VERSION --to-docker=true --strategy=docker $BC_OPTS $OC_OPTS || true
+    else
+      oc new-build --name $RELEASE_NAME --binary=true --to=docker.io/syndesis/$NAME:$VERSION --strategy=source --to-docker=true $BC_OPTS $OC_OPTS || true
+    fi
+    oc set build-secret --push $RELEASE_NAME dockerhub
+    oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz $OC_OPTS --follow
+  fi
+
+
   rm /tmp/archive.tar.gz
 }
 
@@ -197,6 +258,8 @@ function plugins() {
   popd
 }
 
+#
+# Images: Jenkins and base images
 function images() {
   pushd images
 
@@ -221,15 +284,14 @@ function images() {
 
   # We could possibly remove this?
   #OPENSHIFT_JENKINS_DOCKER_IMAGE=$(istag2docker "${ARTIFACT_PREFIX}openshift-jenkins")
-  oc new-build --name ${ARTIFACT_PREFIX}syndesis-jenkins --binary=true --image-stream=${ARTIFACT_PREFIX}openshift-jenkins:$VERSION --to=syndesis/${ARTIFACT_PREFIX}syndesis-jenkins:${VERSION} --strategy=source $OC_OPTS || true
-  tar -czvf /tmp/archive.tar.gz bin configuration plugins plugins.txt
-  oc start-build ${ARTIFACT_PREFIX}syndesis-jenkins $OC_OPTS --from-archive=/tmp/archive.tar.gz --follow
-  rm /tmp/archive.tar.gz
+  dockerbuild none syndesis-jenkins ${ARTIFACT_PREFIX}openshift-jenkins $VERSION
   popd
 
   popd
 }
 
+#
+# Agent Images
 function agentimages() {
   pushd images/openshift-jenkins
 
@@ -255,7 +317,8 @@ function agentimages() {
   popd
 }
 
-
+#
+# Tools: For example: nsswrapper or maven-with-repo.
 function tools() {
   pushd images/nsswrapper-glibc
   oc import-image centos:centos7 --from=docker.io/library/centos:centos7 --confirm || true
@@ -273,6 +336,7 @@ function tools() {
 # Options and flags
 SKIP_TESTS=$(hasflag --skip-tests "$@" 2> /dev/null)
 CLEAN=$(hasflag --clean "$@" 2> /dev/null)
+RELEASE=$(hasflag --release "$@" 2> /dev/null)
 ARTIFACT_PREFIX=$(readopt --artifact-prefix "$@" 2> /dev/null)
 NAMESPACE=$(or $(readopt --namespace "$@" 2> /dev/null) $(oc project -q))
 VERSION=$(or $(readopt --version "$@" 2> /dev/null) "latest")
@@ -291,6 +355,11 @@ MAVEN_OPTS=""
 MAVEN_CLEAN_GOAL="clean"
 MAVEN_IMAGE_BUILD_GOAL="fabric8:build"
 RF=${RESUME_FROM:-"plugins"}
+
+DOCKERHUB_USERNAME=$(or $(readopt --dockerhub-username $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/username))
+DOCKERHUB_EMAIL=$(or $(readopt --dockerhub-password $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/email))
+DOCKERHUB_PASSWORD=$(or $(readopt --dockerhub-password $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/password))
+
 
 #
 # Apply options
@@ -322,8 +391,9 @@ else
   MAVEN_OPTS="$MAVEN_OPTS -Dfabric8.mode=kubernetes"
 fi
 
-git submodule init
-git submodule update
+git submodule update --init --recursive
+
+install_dockerhub_secret
 
 for module in $(modules_to_build)
 do
@@ -332,3 +402,8 @@ do
   echo "=========================================================="
   eval "${module}"
 done
+
+if [ -n "$RELEASE" ]; then
+  git submodule foreach git tag -m "$VERSION" $VERSION
+  git tag -m "$VERSION" $VERSION
+fi
