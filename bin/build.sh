@@ -8,6 +8,11 @@ set -e
 function displayHelp() {
   echo "This script helps you build the syndesis monorepo."
   echo "The available options are:"
+  echo ""
+  echo " --dockerhub-username    The dockerhub username to use for image releases."
+  echo " --dockerhub-email       The dockerhub email to use for image releases."
+  echo " --dockerhub-passowrd    The dockerhub password to use for image releases."
+  echo ""
   echo " --with-artifact-prefix  Specifies an prefix for artifacts"
   echo " --namespace N           Specifies the namespace to use."
   echo " --resume-from           Resume build from module."
@@ -357,9 +362,8 @@ MAVEN_IMAGE_BUILD_GOAL="fabric8:build"
 RF=${RESUME_FROM:-"plugins"}
 
 DOCKERHUB_USERNAME=$(or $(readopt --dockerhub-username $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/username))
-DOCKERHUB_EMAIL=$(or $(readopt --dockerhub-password $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/email))
+DOCKERHUB_EMAIL=$(or $(readopt --dockerhub-email $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/email))
 DOCKERHUB_PASSWORD=$(or $(readopt --dockerhub-password $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/password))
-
 
 #
 # Apply options
@@ -405,5 +409,6 @@ done
 
 if [ -n "$RELEASE" ]; then
   git submodule foreach git tag -m "$VERSION" $VERSION
+  git submodule foreach git push origin $VERSION
   git tag -m "$VERSION" $VERSION
 fi

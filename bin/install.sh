@@ -17,11 +17,34 @@
 
 # Save global script args
 ARGS="$@"
+GITHUB_USERNAME=$(or $(readopt --github-username $ARGS 2> /dev/null) "syndesisci")
+GITHUB_PASSWORD=$(or $(readopt --github-password $ARGS 2> /dev/null) $(pass show github/syndesisci/password))
+GITHUB_ACCESS_TOKEN=$(or $(readopt --github-access-token $ARGS 2> /dev/null) $(pass show github/syndesisci/access_token))
+GITHUB_CLIENT_ID=$(or $(readopt --github-client-id $ARGS 2> /dev/null) $(pass show github/syndesisci/client_id))
+GITHUB_CLIENT_SECRET=$(or $(readopt --github-client-secret $ARGS 2> /dev/null) $(pass show github/syndesisci/secret))
+
+SONATYPE_USERNAME=$(or $(readopt --sonatype-username $ARGS 2> /dev/null) $(pass show sonatype/syndesisci/username))
+SONATYPE_PASSWORD=$(or $(readopt --sonatype-password $ARGS 2> /dev/null) $(pass show sonatype/syndesisci/password))
+
 
 # Display a help message.
 function displayHelp() {
     echo "This script helps you build the syndesis monorepo."
     echo "The available options are:"
+    echo ""
+    echo " --github-username       The github username to use."
+    echo " --github-password       The github password to use."
+    echo " --github-access-toke    The github access token to use."
+    echo " --github-client-id      The github oauth client id to use."
+    echo " --github-client-secret  The github oauth client secret to use."
+    echo ""
+    echo " --dockerhub-username    The dockerhub username to use for image releases."
+    echo " --dockerhub-email       The dockerhub email to use for image releases."
+    echo " --dockerhub-passowrd    The dockerhub password to use for image releases."
+    echo ""
+    echo " --sonatype-username     The sonatype username to use for maven releases."
+    echo " --sonatype-passowrd     The sonatype password to use for maven releases."
+    echo ""
     echo " --skip-maven-settings    Skips maven settings."
     echo " --skip-release-settings  Skips release settings (gpg & ssh)."
     echo " --domain D               Specifies the domain to use for setting up routes."
@@ -251,11 +274,12 @@ function init() {
 
 }
 
+HELP=$(hasflag --help "$@" 2> /dev/null)
 CLEAN=$(hasflag --clean $ARGS 2> /dev/null)
 NAMESPACE=$(or $(readopt --namespace $ARGS 2> /dev/null) $(oc project -q))
 FLAVOR=$(or $(readopt --flavor $ARGS 2> /dev/null) "persistent")
 VERSION=$(or $(readopt --version $ARGS 2> /dev/null) "latest")
-HOSTNAME_SUFFIX=$(or $(readopt --flavor $ARGS 2> /dev/null) "-$NAMESPACE")
+HOSTNAME_SUFFIX=$(or $(readopt --hostname-suffix $ARGS 2> /dev/null) "-$NAMESPACE")
 DOMAIN=$(or $(readopt --domain $ARGS 2> /dev/null) "b6ff.rh-idev.openshiftapps.com")
 
 SKIP_MAVEN_SETTINGS=$(hasflag --skip-maven-settings $ARGS 2> /dev/null)
@@ -271,7 +295,7 @@ SONATYPE_USERNAME=$(or $(readopt --sonatype-username $ARGS 2> /dev/null) $(pass 
 SONATYPE_PASSWORD=$(or $(readopt --sonatype-password $ARGS 2> /dev/null) $(pass show sonatype/syndesisci/password))
 
 DOCKERHUB_USERNAME=$(or $(readopt --dockerhub-username $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/username))
-DOCKERHUB_EMAIL=$(or $(readopt --dockerhub-password $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/email))
+DOCKERHUB_EMAIL=$(or $(readopt --dockerhub-email $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/email))
 DOCKERHUB_PASSWORD=$(or $(readopt --dockerhub-password $ARGS 2> /dev/null) $(pass show dockerhub/syndesisci/password))
 
 if [ -n "$HELP" ]; then
