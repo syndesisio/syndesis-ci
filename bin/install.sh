@@ -133,7 +133,7 @@ function install_jenkins() {
   process_jenkins | oc create -f -
 
 
-  oc adm policy add-cluster-role-to-user self-provisioner system:serviceaccount:syndesis-ci:jenkins
+  oc adm policy add-cluster-role-to-user self-provisioner system:serviceaccount:$(oc project -q):jenkins
   popd
 }
 function process_nexus() {
