@@ -336,7 +336,18 @@ function tools() {
   popd
 }
 
+function init() {
+  if [ -d $CI_HOME/templates ] && [ -d $CI_HOME/bin ]; then
+    echo "Using CI project from: $CI_HOME"
+  elif [ -d $CI_HOME/../templates ] && [ -d $CI_HOME/../templates ]; then
+    CI_HOME=$CI_HOME/../
+    echo "Using CI project from: $CI_HOME"
+  else
+    echo "Can't determine which is the CI_HOME. Run the script from the root of the project or from the bin directory."
+    exit 1
+  fi
 
+}
 #
 # Options and flags
 SKIP_TESTS=$(hasflag --skip-tests "$@" 2> /dev/null)
@@ -395,8 +406,10 @@ else
   MAVEN_OPTS="$MAVEN_OPTS -Dfabric8.mode=kubernetes"
 fi
 
-git submodule update --init --recursive
 
+CI_HOME=$PWD
+init
+git submodule update --init --recursive
 install_dockerhub_secret
 
 for module in $(modules_to_build)
@@ -408,7 +421,12 @@ do
 done
 
 if [ -n "$RELEASE" ]; then
+
+  # Set remotes
   git submodule foreach git tag -m "$VERSION" $VERSION
-  git submodule foreach git push origin $VERSION
+  git submodule foreach $CI_HOME/bin/set-origin-via-ssh.sh
+  git submodule foreach git push origin-via-ssh $VERSION
   git tag -m "$VERSION" $VERSION
+  $CI_HOME/bin/set-origin-via-ssh.sh
+  git push origin-via-ssh $VERSION
 fi
