@@ -1,6 +1,3 @@
-[submodule "images/syndesis-jenkins"]
-	path = images/syndesis-jenkins
-	url = https://github.com/syndesisio/syndesis-jenkins.git
 [submodule "plugins/kubernetes-plugin"]
 	path = plugins/kubernetes-plugin
 	url = https://github.com/syndesisio/kubernetes-plugin.git

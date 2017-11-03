@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.11">
+  <actions>
+    <io.jenkins.blueocean.service.embedded.BlueOceanUrlAction plugin="blueocean-rest-impl@1.1.6">
+      <blueOceanUrlObject class="io.jenkins.blueocean.service.embedded.BlueOceanUrlObjectImpl">
+        <mappedUrl>blue/organizations/jenkins/syndesis-ci-release</mappedUrl>
+      </blueOceanUrlObject>
+    </io.jenkins.blueocean.service.embedded.BlueOceanUrlAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty plugin="openshift-sync@0.1.23">
+      <uid></uid>
+      <namespace></namespace>
+      <name></name>
+      <resourceVersion></resourceVersion>
+    </io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>releaseVersion</name>
+          <description>Release Version</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.41">
+    <script>def currentNamespace=&apos;syndesis-ci&apos;
+node {
+  stage (&apos;Load pipeline library&apos;) {
+    git &apos;https://github.com/syndesisio/syndesis-ci.git&apos;
+    sh &apos;git submodule update --init pipeline-library&apos;
+    library identifier: &quot;syndesis-pipeline-library@${env.BRANCH_NAME}&quot;, retriever: workspaceRetriever(&quot;${WORKSPACE}/pipeline-library&quot;)
+    currentNamespace=podNamespace()
+  }
+}
+
+  inNamespace(cloud: &apos;openshift&apos;, prefix: &apos;ci-release&apos;) {
+    echo &quot;Using ${KUBERNETES_NAMESPACE}&quot;
+    slave {
+        withSshKeys {
+            inside(serviceAccount: &apos;jenkins&apos;, namespace: &quot;$currentNamespace&quot;) {
+                stage (&apos;Checkout source&apos;) {
+                    //Checkout the source again inside the agent...
+                    git &apos;https://github.com/syndesisio/syndesis-ci.git&apos;
+                    sh &apos;git config --global user.email &quot;rhipaasuser@gmail.com&quot;&apos;
+                    sh &apos;git config --global user.name &quot;Syndesis CI&quot;&apos;
+                    sh &apos;git submodule update --init --recursive&apos;
+                }
+        
+
+                stage(&apos;Build&apos;) {
+                    //We disable test, because some plugins assume minikube and break ...
+                    sh &quot;./bin/build.sh --skip-tests --namespace $KUBERNETES_NAMESPACE --release --version ${releaseVersion}&quot;
+                }
+            }
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

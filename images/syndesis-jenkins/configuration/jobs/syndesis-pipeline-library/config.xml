@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject plugin="workflow-multibranch@2.14">
+  <actions/>
+  <description>A pipeline library used for Syndesis</description>
+  <properties>
+    <org.jenkinsci.plugins.workflow.libs.FolderLibraries plugin="workflow-cps-global-lib@2.9-ipaas-0001">
+      <libraries>
+        <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+          <name>syndesis-pipeline-library</name>
+          <retriever class="org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever">
+            <scm class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.0.4">
+              <id>dd90134d-b5ee-4bb7-abef-3a24b626a914</id>
+              <checkoutCredentialsId>SAME</checkoutCredentialsId>
+              <scanCredentialsId>github</scanCredentialsId>
+              <repoOwner>syndesisio</repoOwner>
+              <repository>syndesis-pipeline-library</repository>
+              <includes>*</includes>
+              <excludes></excludes>
+              <buildOriginBranch>true</buildOriginBranch>
+              <buildOriginBranchWithPR>true</buildOriginBranchWithPR>
+              <buildOriginPRMerge>false</buildOriginPRMerge>
+              <buildOriginPRHead>false</buildOriginPRHead>
+              <buildForkPRMerge>true</buildForkPRMerge>
+              <buildForkPRHead>false</buildForkPRHead>
+            </scm>
+          </retriever>
+          <defaultVersion>master</defaultVersion>
+          <implicit>false</implicit>
+          <allowVersionOverride>true</allowVersionOverride>
+        </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+      </libraries>
+    </org.jenkinsci.plugins.workflow.libs.FolderLibraries>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig plugin="pipeline-model-definition@1.1.8">
+      <dockerLabel></dockerLabel>
+      <registry plugin="docker-commons@1.5"/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig>
+  </properties>
+  <folderViews class="jenkins.branch.MultiBranchProjectViewHolder" plugin="branch-api@2.0.8">
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </folderViews>
+  <healthMetrics>
+    <com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric plugin="cloudbees-folder@6.0.2">
+      <nonRecursive>false</nonRecursive>
+    </com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric>
+  </healthMetrics>
+  <icon class="jenkins.branch.MetadataActionFolderIcon" plugin="branch-api@2.0.8">
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </icon>
+  <orphanedItemStrategy class="com.cloudbees.hudson.plugins.folder.computed.DefaultOrphanedItemStrategy" plugin="cloudbees-folder@6.0.2">
+    <pruneDeadBranches>true</pruneDeadBranches>
+    <daysToKeep>7</daysToKeep>
+    <numToKeep>0</numToKeep>
+  </orphanedItemStrategy>
+  <triggers/>
+  <sources class="jenkins.branch.MultiBranchProject$BranchSourceList" plugin="branch-api@2.0.8">
+    <data>
+      <jenkins.branch.BranchSource>
+        <source class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.0.4">
+          <id>ab87d7d2-c0f5-4b61-8000-8877324f9f62</id>
+          <checkoutCredentialsId>SAME</checkoutCredentialsId>
+          <scanCredentialsId>github</scanCredentialsId>
+          <repoOwner>syndesisio</repoOwner>
+          <repository>syndesis-pipeline-library</repository>
+          <includes>*</includes>
+          <excludes></excludes>
+          <buildOriginBranch>true</buildOriginBranch>
+          <buildOriginBranchWithPR>true</buildOriginBranchWithPR>
+          <buildOriginPRMerge>false</buildOriginPRMerge>
+          <buildOriginPRHead>false</buildOriginPRHead>
+          <buildForkPRMerge>true</buildForkPRMerge>
+          <buildForkPRHead>false</buildForkPRHead>
+        </source>
+        <strategy class="jenkins.branch.DefaultBranchPropertyStrategy">
+          <properties class="java.util.Arrays$ArrayList">
+            <a class="jenkins.branch.BranchProperty-array">
+              <com.adobe.jenkins.github__pr__comment__build.TriggerPRCommentBranchProperty plugin="github-pr-comment-build@1.1">
+                <commentBody>retest this please</commentBody>
+              </com.adobe.jenkins.github__pr__comment__build.TriggerPRCommentBranchProperty>
+            </a>
+          </properties>
+        </strategy>
+      </jenkins.branch.BranchSource>
+    </data>
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </sources>
+  <factory class="org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory">
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </factory>
+</org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>

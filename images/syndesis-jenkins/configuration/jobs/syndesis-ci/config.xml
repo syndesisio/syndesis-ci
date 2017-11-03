@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject plugin="workflow-multibranch@2.14">
+  <actions>
+    <io.jenkins.blueocean.service.embedded.BlueOceanUrlAction plugin="blueocean-rest-impl@1.1.6">
+      <blueOceanUrlObject class="io.jenkins.blueocean.service.embedded.BlueOceanUrlObjectImpl">
+        <mappedUrl>blue/organizations/jenkins/syndesis-ci/branches</mappedUrl>
+      </blueOceanUrlObject>
+    </io.jenkins.blueocean.service.embedded.BlueOceanUrlAction>
+  </actions>
+  <description></description>
+  <properties>
+    <org.jenkinsci.plugins.workflow.libs.FolderLibraries plugin="workflow-cps-global-lib@2.9-ipaas-0001">
+      <libraries>
+        <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+          <name>syndesis-pipeline-library</name>
+          <retriever class="org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever">
+            <scm class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.2.3">
+              <id>dd90134d-b5ee-4bb7-abef-3a24b626a914</id>
+              <credentialsId>github</credentialsId>
+              <repoOwner>syndesisio</repoOwner>
+              <repository>syndesis-pipeline-library</repository>
+              <traits>
+                <org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+                  <strategyId>3</strategyId>
+                </org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+                <org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait>
+                  <strategyId>1</strategyId>
+                  <trust class="org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait$TrustContributors"/>
+                </org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait>
+              </traits>
+            </scm>
+          </retriever>
+          <defaultVersion>master</defaultVersion>
+          <implicit>true</implicit>
+          <allowVersionOverride>true</allowVersionOverride>
+        </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+      </libraries>
+    </org.jenkinsci.plugins.workflow.libs.FolderLibraries>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig plugin="pipeline-model-definition@1.1.8">
+      <dockerLabel></dockerLabel>
+      <registry plugin="docker-commons@1.8"/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig>
+  </properties>
+  <folderViews class="jenkins.branch.MultiBranchProjectViewHolder" plugin="branch-api@2.0.9">
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </folderViews>
+  <healthMetrics>
+    <com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric plugin="cloudbees-folder@6.0.4">
+      <nonRecursive>false</nonRecursive>
+    </com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric>
+  </healthMetrics>
+  <icon class="jenkins.branch.MetadataActionFolderIcon" plugin="branch-api@2.0.9">
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </icon>
+  <orphanedItemStrategy class="com.cloudbees.hudson.plugins.folder.computed.DefaultOrphanedItemStrategy" plugin="cloudbees-folder@6.0.4">
+    <pruneDeadBranches>true</pruneDeadBranches>
+    <daysToKeep>7</daysToKeep>
+    <numToKeep>0</numToKeep>
+  </orphanedItemStrategy>
+  <triggers/>
+  <sources class="jenkins.branch.MultiBranchProject$BranchSourceList" plugin="branch-api@2.0.9">
+    <data>
+      <jenkins.branch.BranchSource>
+        <source class="org.jenkinsci.plugins.github_branch_source.GitHubSCMSource" plugin="github-branch-source@2.2.3">
+          <id>ab87d7d2-c0f5-4b61-8000-8877324f9f62</id>
+          <credentialsId>github</credentialsId>
+          <repoOwner>syndesisio</repoOwner>
+          <repository>syndesis-ci</repository>
+          <traits>
+            <org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+              <strategyId>3</strategyId>
+            </org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait>
+            <org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait>
+              <strategyId>1</strategyId>
+              <trust class="org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait$TrustContributors"/>
+            </org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait>
+            <org.jenkinsci.plugins.github__branch__source.SSHCheckoutTrait/>
+          </traits>
+        </source>
+        <strategy class="jenkins.branch.DefaultBranchPropertyStrategy">
+          <properties class="java.util.Arrays$ArrayList">
+            <a class="jenkins.branch.BranchProperty-array">
+              <com.adobe.jenkins.github__pr__comment__build.TriggerPRCommentBranchProperty plugin="github-pr-comment-build@1.1">
+                <commentBody>retest this please</commentBody>
+              </com.adobe.jenkins.github__pr__comment__build.TriggerPRCommentBranchProperty>
+            </a>
+          </properties>
+        </strategy>
+      </jenkins.branch.BranchSource>
+    </data>
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </sources>
+  <factory class="org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory">
+    <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+  </factory>
+</org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>

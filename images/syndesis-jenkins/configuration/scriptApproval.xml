@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<scriptApproval plugin="script-security@1.27">
+    <approvedScriptHashes/>
+    <approvedSignatures>
+        <string>method java.text.Format format java.lang.Object</string>
+        <string>new java.text.SimpleDateFormat java.lang.String</string>
+        <string>staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods get java.util.Map java.lang.Object java.lang.Object</string>
+    </approvedSignatures>
+    <aclApprovedSignatures/>
+    <approvedClasspathEntries/>
+    <pendingScripts/>
+    <pendingSignatures/>
+    <pendingClasspathEntries/>
+</scriptApproval>
