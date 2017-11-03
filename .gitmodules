@@ -19,6 +19,3 @@
 [submodule "syndesis-system-tests"]
 	path = system-tests
 	url = https://github.com/syndesisio/syndesis-system-tests.git
-[submodule "images/nsswrapper-glibc"]
-	path = images/nsswrapper-glibc
-	url = https://github.com/syndesisio/nsswrapper-glibc.git
