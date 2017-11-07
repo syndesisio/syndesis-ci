@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.11">
+  <actions>
+    <io.jenkins.blueocean.service.embedded.BlueOceanUrlAction plugin="blueocean-rest-impl@1.1.6">
+      <blueOceanUrlObject class="io.jenkins.blueocean.service.embedded.BlueOceanUrlObjectImpl">
+        <mappedUrl>blue/organizations/jenkins/atlasmap-release</mappedUrl>
+      </blueOceanUrlObject>
+    </io.jenkins.blueocean.service.embedded.BlueOceanUrlAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty plugin="openshift-sync@0.1.23">
+      <uid></uid>
+      <namespace></namespace>
+      <name></name>
+      <resourceVersion></resourceVersion>
+    </io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>releaseVersion</name>
+          <description>The version to release.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>developmentVersion</name>
+          <description>The version to set after the release.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>mavenReleaseEnabled</name>
+          <description>Enables the release of maven artifacts</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>dockerReleaseEnabled</name>
+          <description>Enable the release of Docker images.</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.41">
+    <script>@Library(&apos;github.com/syndesisio/syndesis-pipeline-library&apos;)
+def parameters = [:]
+
+node {
+
+    slave {
+        withArbitraryUser () {
+            withOpenshift {
+                withMaven (mavenSettingsXmlSecret: &apos;m2-settings&apos;, mavenLocalRepositoryPath: &apos;/home/jenkins/mvnrepo/&apos;, serviceAccount: &apos;jenkins&apos;) {
+                    withSshKeys {
+                        withGpgKeys (image: &apos;centos:centos7&apos;) {
+                            inside {
+                                git &apos;git@github.com:atlasmap/atlasmap-runtime.git&apos;
+                                container(&apos;maven&apos;) {
+                                    sh &apos;git config --global user.email &quot;rhipaasuser@gmail.com&quot;&apos;
+                                    sh &apos;git config --global user.name &quot;Syndesis CI&quot;&apos;
+                            
+                                    sonatypeRelease(enabled: mavenReleaseEnabled, releaseVersion: &quot;${releaseVersion}&quot;, developmentVersion: &quot;${developmentVersion}&quot;, profiles: &quot;fabric8,ci,release,community-release&quot;, stagingProgressTimeoutMinutes: &apos;10&apos;)
+                           
+                                    tag(sourceProject: &apos;syndesis-ci&apos;, sourceImageStream: &apos;atlasmap&apos;, sourceTag: &quot;${releaseVersion}&quot;, targetProject: &apos;syndesis-ci&apos;, targetImageStream: &apos;atlasmap&apos;, targetTag: &apos;1.0&apos;)
+                                    tag(sourceProject: &apos;syndesis-ci&apos;, sourceImageStream: &apos;atlasmap&apos;, sourceTag: &quot;${releaseVersion}&quot;, targetProject: &apos;syndesis-ci&apos;, targetImageStream: &apos;atlasmap&apos;, targetTag: &apos;latest&apos;)
+                                    
+                                    [&quot;${releaseVersion}&quot;, &quot;latest&quot;, &quot;1.0&quot;].each {
+                                    imagePush(enabled: dockerReleaseEnabled, name: &quot;atlasmap-${it}-push-dockerhub-bc&quot;, user:&apos;atlasmap&apos;, repo: &apos;atlasmap&apos;, tag: &quot;${it}&quot;, imageStreamTag: &quot;atlasmap:${it}&quot;)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

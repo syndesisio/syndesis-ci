@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.11">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty plugin="openshift-sync@0.1.23">
+      <uid></uid>
+      <namespace></namespace>
+      <name></name>
+      <resourceVersion></resourceVersion>
+    </io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>5</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>5</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.22">
+      <autoRebuild>false</autoRebuild>
+    </com.sonyericsson.rebuild.RebuildSettings>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.33">
+    <script>@Library(&apos;github.com/syndesisio/syndesis-pipeline-library@master&apos;)
+def params = [:]
+
+slave {
+    withArbitraryUser {
+        withSshKeys {
+            withOpenshift {
+                withMaven(serviceAccount: &apos;jenkins&apos;, mavenSettingsXmlSecret: &apos;m2-settings&apos;) {
+                    withYarn {
+                        inside {
+                             git &apos;git@github.com:syndesisio/syndesis.git&apos;
+                             stage (&apos;update submodules&apos;) {
+                                 sh &apos;git submodule update --init --recursive&apos;
+                             }
+                             stage (&apos;build connectors&apos;) {
+                                container(&apos;maven&apos;) {
+                                    sh &quot;&quot;&quot;
+                                    cd connectors
+                                    mvn -B -U clean install
+                                    &quot;&quot;&quot;
+                                }
+                             }
+                             stage (&apos;build verifier&apos;) {
+                                container(&apos;maven&apos;) {
+                                    sh &quot;&quot;&quot;
+                                    cd syndesis-verifier
+                                    mvn -B -U clean install
+                                    &quot;&quot;&quot;
+                                }
+                             }
+                             stage (&apos;build integration runtime&apos;) {
+                                container(&apos;maven&apos;) {
+                                    sh &quot;&quot;&quot;
+                                    cd integration-runtime
+                                    mvn -B -U clean install
+                                    &quot;&quot;&quot;
+                                }
+                             }
+                             stage (&apos;build rest&apos;) {
+                                container(&apos;maven&apos;) {
+                                    sh &quot;&quot;&quot;
+                                    cd rest
+                                    mvn -B -U clean install fabric8:build -Pci
+                                    &quot;&quot;&quot;
+                                }
+                             }
+                             stage (&apos;build ui&apos;) {
+                                container(&apos;yarn&apos;) {
+                                    sh &quot;&quot;&quot;
+                                    cd ui
+                                    yarn
+                                    yarn ng build -- --aot --prod --progress=false
+                                    &quot;&quot;&quot;
+                                }
+                                container (&apos;openshift&apos;) {
+                                    sh &quot;&quot;&quot;
+                                    cd ui
+                                    BC_DETAILS=`oc get bc | grep syndesis-ui`
+                                    if [ -z &quot;\$BC_DETAILS&quot; ]; then
+                                        cat docker/Dockerfile | oc new-build --dockerfile=- --to=syndesis/syndesis-ui:latest --strategy=docker
+                                    fi
+                                    tar -cvf archive.tar dist docker
+                                    oc start-build -F --from-archive=archive.tar syndesis-ui
+                                    rm archive.tar
+                                    &quot;&quot;&quot;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

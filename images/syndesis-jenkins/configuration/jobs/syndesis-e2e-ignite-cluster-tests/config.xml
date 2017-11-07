@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.11">
+  <actions>
+    <io.jenkins.blueocean.service.embedded.BlueOceanUrlAction plugin="blueocean-rest-impl@1.1.6">
+      <blueOceanUrlObject class="io.jenkins.blueocean.service.embedded.BlueOceanUrlObjectImpl">
+        <mappedUrl>blue/organizations/jenkins/syndesis-e2e-ignite-cluster-tests</mappedUrl>
+      </blueOceanUrlObject>
+    </io.jenkins.blueocean.service.embedded.BlueOceanUrlAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty plugin="openshift-sync@0.1.23">
+      <uid></uid>
+      <namespace></namespace>
+      <name></name>
+      <resourceVersion></resourceVersion>
+    </io.fabric8.jenkins.openshiftsync.BuildConfigProjectProperty>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>5</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>5</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.26.0">
+      <projectUrl>https://github.com/syndesisio/syndesis-qe.git/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>SYNDESIS_UI_URL</name>
+          <description></description>
+          <defaultValue>https://app-proj7571.6a63.fuse-ignite.openshiftapps.com</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>SCENARIO</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>SECRET_NAME</name>
+          <description></description>
+          <defaultValue>syndesis-e2e-ignite-cluster-tests</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.41">
+    <script>@Library(&apos;github.com/syndesisio/syndesis-pipeline-library@master&apos;)
+def params = [:]
+
+node {
+    slave {
+        withOpenshift() {
+            def secretName = &quot;${SECRET_NAME}&quot;
+            def test_config = sh returnStdout: true, script: &quot;oc get cm ${secretName} -o jsonpath=\&quot;{ .data.test_config }\&quot; -n syndesis-ci&quot;
+            withYarn() {
+                inside {
+                    stage(&apos;End to End Tests&apos;) {
+                    container(name: &apos;yarn&apos;) {
+                      git url: &apos;https://github.com/syndesisio/syndesis-qe.git&apos;
+                      writeFile(file: &apos;./ui-tests-protractor/test_config.json&apos;, text: &quot;${test_config}&quot;)
+                      try {
+                        ansiColor(&apos;xterm&apos;) {
+                          sh &quot;&quot;&quot;
+                          export SYNDESIS_UI_URL=${SYNDESIS_UI_URL}
+                          export SYNDESIS_E2E_RESTART=0
+                          export SCENARIO=${SCENARIO}
+                          cd ui-tests-protractor
+                          ./e2e-xvfb.sh
+                          &quot;&quot;&quot;
+                        }
+                      } catch(err) {
+                        echo &quot;E2E tests failed: ${err}&quot;
+                        currentBuild.result = &apos;FAILURE&apos;
+                      } finally {
+                        stage(&apos;Archive results&apos;) {    
+                        archive includes: &apos;ui-tests-protractor/e2e/cucumber-reports/**/*&apos;
+                        }                          
+                    }
+                    }
+                  }
+                }
+            }
+              
+           
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
