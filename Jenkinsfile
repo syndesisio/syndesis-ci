@@ -1,5 +1,5 @@
 /**
-   This pipeline builds the whole Syndesis CI:
+ This pipeline builds the whole Syndesis CI:
 
  - Jenkins Plugins
  - Jenkins Agent Images
@@ -9,13 +9,15 @@ def currentNamespace='syndesis-ci'
 
 node {
   stage ('Load pipeline library') {
-    library identifier: "syndesis-pipeline-library@${env.BRANCH_NAME}", retriever: workspaceRetriever("${WORKSPACE}/pipeline-library")
+    checkout scm
+    sh "ls -al ${WORKSPACE}/pipeline-library/"
+    library identifier: "local-pipeline-library@${env.BRANCH_NAME}", retriever: workspaceRetriever("${WORKSPACE}/pipeline-library/")
     currentNamespace=podNamespace()
   }
 
   inNamespace(cloud: 'openshift', prefix: 'ci-self-test') {
     echo "Using ${KUBERNETES_NAMESPACE}"
-    slave {
+    uberPod {
       inside(serviceAccount: 'jenkins', namespace: "$currentNamespace") {
         stage ('Checkout source') {
           //Checkout the source again inside the agent...
