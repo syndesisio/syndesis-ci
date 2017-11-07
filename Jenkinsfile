@@ -9,8 +9,6 @@ def currentNamespace='syndesis-ci'
 
 node {
   stage ('Load pipeline library') {
-    checkout scm
-    sh 'git submodule update --init pipeline-library'
     library identifier: "syndesis-pipeline-library@${env.BRANCH_NAME}", retriever: workspaceRetriever("${WORKSPACE}/pipeline-library")
     currentNamespace=podNamespace()
   }
