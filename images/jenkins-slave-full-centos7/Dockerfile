@@ -1,4 +1,4 @@
-FROM openshift/jenkins-slave-maven-centos7:1.0.1-slave-maven-centos7:1.0.1-slave-maven-centos7:latest-slave-maven-centos7:latest-slave-maven-centos7:latest
+FROM openshift/jenkins-slave-maven-centos7:latest-slave-maven-centos7:latest
 
 ENV NODEJS_VERSION=4.4 \
     NPM_CONFIG_PREFIX=$HOME/.npm-global \
@@ -28,7 +28,22 @@ RUN curl https://dl.yarnpkg.com/rpm/yarn.repo > /etc/yum.repos.d/yarn.repo && \
     mkdir /.cache /.config && chmod 777 /.cache /.config && \
     dbus-uuidgen > /etc/machine-id
 
+RUN mkdir -p /usr/local/share/maven/repository
+
+RUN mkdir -p /usr/local/src && \
+    cd /usr/local/src && \
+    git clone https://github.com/syndesisio/syndesis.git && \
+    cd syndesis && \
+    git submodule init && git submodule update
+
+RUN cd /usr/local/src/syndesis/rest && /opt/rh/rh-maven33/root/usr/bin/mvn clean install -DskipTests -Dmaven.repo.local=/usr/local/share/maven/repository/
+
+RUN rm -rf /usr/local/src/syndesis
+
 RUN chown -R 1001:0 $HOME && \
     chmod -R g+rw $HOME
+
+RUN chown -R 1001:0 /usr/local/share/maven/repository && \
+    chmod -R g+rw /usr/local/share/maven/repository
 
 USER 1001

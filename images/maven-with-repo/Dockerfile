@@ -10,6 +10,6 @@ RUN mkdir -p /usr/local/src && \
     cd syndesis && \
     git submodule init && git submodule update
 
-RUN cd /usr/local/src/syndesis/rest && mvn clean install -DskipTests
+RUN cd /usr/local/src/syndesis/rest && mvn clean install -DskipTests -Dmaven.repo.local=/usr/local/share/maven/repository/
 
-RUN rm -rf /usr/loca/src/syndesis
+RUN rm -rf /usr/local/src/syndesis

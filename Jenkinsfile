@@ -26,6 +26,7 @@ node {
         }
 
         stage('Build') {
+          sh 'oc version'
           //We disable test, because some plugins assume minikube and break ...
           sh "./bin/build.sh --artifact-prefix test- --skip-tests --namespace $KUBERNETES_NAMESPACE"
         }
