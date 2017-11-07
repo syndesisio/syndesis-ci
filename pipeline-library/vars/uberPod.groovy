@@ -55,7 +55,7 @@ def call(Map parameters = [:], body) {
 
     podTemplate(cloud: "${cloud}", name: "${name}", namespace: "${namespace}", label: label, inheritFrom: "${inheritFrom}", serviceAccount: "${serviceAccount}",
             idleMinutesStr: "${idleMinutes}",
-            containers: [containerTemplate(name: 'maven', image: "${image}", command: '/bin/sh -c', args: 'cat', ttyEnabled: true, envVars: envVars)],
+            containers: [containerTemplate(name: "${name}", image: "${image}", command: '/bin/sh -c', args: 'cat', ttyEnabled: true, envVars: envVars)],
             volumes: volumes) {
         body()
     }
