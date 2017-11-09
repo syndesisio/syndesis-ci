@@ -17,15 +17,6 @@
 
 # Save global script args
 ARGS="$@"
-GITHUB_USERNAME=$(or $(readopt --github-username $ARGS 2> /dev/null) "syndesisci")
-GITHUB_PASSWORD=$(or $(readopt --github-password $ARGS 2> /dev/null) $(pass show github/syndesisci/password))
-GITHUB_ACCESS_TOKEN=$(or $(readopt --github-access-token $ARGS 2> /dev/null) $(pass show github/syndesisci/access_token))
-GITHUB_CLIENT_ID=$(or $(readopt --github-client-id $ARGS 2> /dev/null) $(pass show github/syndesisci/client_id))
-GITHUB_CLIENT_SECRET=$(or $(readopt --github-client-secret $ARGS 2> /dev/null) $(pass show github/syndesisci/secret))
-
-SONATYPE_USERNAME=$(or $(readopt --sonatype-username $ARGS 2> /dev/null) $(pass show sonatype/syndesisci/username))
-SONATYPE_PASSWORD=$(or $(readopt --sonatype-password $ARGS 2> /dev/null) $(pass show sonatype/syndesisci/password))
-
 
 # Display a help message.
 function displayHelp() {
