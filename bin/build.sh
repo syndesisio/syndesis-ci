@@ -184,7 +184,7 @@ function dockerbuild() {
   fi
 
   tar --exclude='.git' -czvf /tmp/archive.tar.gz .
-  oc start-build $NAME --from-archive=/tmp/archive.tar.gz $OC_OPTS --follow
+  oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS
 
   echo $NAME
   if [ -n "$RELEASE" ]; then
@@ -199,9 +199,8 @@ function dockerbuild() {
       oc new-build --name $RELEASE_NAME --binary=true --to=docker.io/syndesis/$NAME:$VERSION --strategy=source --to-docker=true $BC_OPTS $OC_OPTS || true
     fi
     oc set build-secret --push $RELEASE_NAME dockerhub
-    oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz $OC_OPTS --follow
+    oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS
   fi
-
 
   rm /tmp/archive.tar.gz
 }
