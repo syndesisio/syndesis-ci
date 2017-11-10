@@ -62,7 +62,6 @@ Provides a monorepo for the Syndesis CI.
 
   The script accepts the following flags:
 
-|----------|------------------------------------------------------|
 | Flag     | Description                                          |
 |----------|------------------------------------------------------|
 | --clean  | Specifies the namespace to use                       |
@@ -71,7 +70,6 @@ Provides a monorepo for the Syndesis CI.
 
   It can also be parameterized using the following parameters:
 
-|-------------------------|------------------------------------------------------|
 | Parameter               | Description                                          |
 |-------------------------|------------------------------------------------------|
 | --flavor                | The template type to use (ephemeral, persistent)     |
