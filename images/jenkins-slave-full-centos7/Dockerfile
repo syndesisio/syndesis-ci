@@ -1,4 +1,4 @@
-FROM openshift/jenkins-slave-maven-centos7:latest-slave-maven-centos7:latest
+FROM openshift/jenkins-slave-maven-centos7:1.0.6-slave-maven-centos7:latest-slave-maven-centos7:latest
 
 ENV NODEJS_VERSION=4.4 \
     NPM_CONFIG_PREFIX=$HOME/.npm-global \
@@ -36,7 +36,7 @@ RUN mkdir -p /usr/local/src && \
     cd syndesis && \
     git submodule init && git submodule update
 
-RUN cd /usr/local/src/syndesis/rest && /opt/rh/rh-maven33/root/usr/bin/mvn clean install -DskipTests -Dmaven.repo.local=/usr/local/share/maven/repository/
+#RUN cd /usr/local/src/syndesis/rest && /opt/rh/rh-maven33/root/usr/bin/mvn clean install -DskipTests -Dmaven.repo.local=/usr/local/share/maven/repository/
 
 RUN rm -rf /usr/local/src/syndesis
 
