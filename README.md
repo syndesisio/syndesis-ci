@@ -66,7 +66,6 @@ Provides a monorepo for the Syndesis CI.
 |----------|------------------------------------------------------|
 | --clean  | Specifies the namespace to use                       |
 | --help   | Displays a use message                               |
-|----------|------------------------------------------------------|
 
   It can also be parameterized using the following parameters:
 
