@@ -22,30 +22,26 @@ Provides a monorepo for the Syndesis CI.
 
   The script can be used like:
 
-  #+BEGIN_SRC sh
-  ./bin/build.sh
-  #+END_SRC
+```
+./bin/build.sh
+```
 
   The script accepts the following flags:
 
-  +----------|------------------------------------------------------+
-  | Flag     | Description                                          |
-  +----------|------------------------------------------------------+
-  | --clean  | Specifies the namespace to use                       |
-  | --help   | Displays a use message                               |
-  +----------|------------------------------------------------------+
+| Flag     | Description                                          |
+|----------|------------------------------------------------------|
+| --clean  | Specifies the namespace to use                       |
+| --help   | Displays a use message                               |
 
   It can also be parameterized using the following parameters:
 
-  +-------------------|------------------------------------------------------+
-  | Parameter         | Description                                          |
-  +-------------------|------------------------------------------------------+
-  | --namespace       | The namespace to build images into                   |
-  | --resume-from     | Resume build from modules (agentimages, images)      |
-  | --version         | The version of the artifacts to build                |
-  | --artifact-prefix | The artifact prefix (to prevent clashes)             |
-  +--------------------------------------------------------------------------+
-
+ | Parameter         | Description                                          |
+ |-------------------|------------------------------------------------------|
+ | --namespace       | The namespace to build images into                   |
+ | --resume-from     | Resume build from modules (agentimages, images)      |
+ | --version         | The version of the artifacts to build                |
+ | --artifact-prefix | The artifact prefix (to prevent clashes)             |
+ 
 ## Installing
 
 #### Using a script
@@ -60,49 +56,43 @@ Provides a monorepo for the Syndesis CI.
     - ssh keys
     - gpg keys
 
-  #+BEGIN_SRC sh
-  ./bin/install.sh
-  #+END_SRC
+```
+./bin/install.sh
+```
 
   The script accepts the following flags:
 
-  +----------|------------------------------------------------------+
-  | Flag     | Description                                          |
-  +----------|------------------------------------------------------+
-  | --clean  | Specifies the namespace to use                       |
-  | --help   | Displays a use message                               |
-  +----------|------------------------------------------------------+
+| Flag     | Description                                          |
+|----------|------------------------------------------------------|
+| --clean  | Specifies the namespace to use                       |
+| --help   | Displays a use message                               |
 
   It can also be parameterized using the following parameters:
 
-  +-------------------------|------------------------------------------------------+
-  | Parameter               | Description                                          |
-  +-------------------------|------------------------------------------------------+
-  | --flavor                | The template type to use (ephemeral, persistent)     |
-  | --namespace             | The namespace to install CI into                     |
-  | --version               | The version of the artifacts to build                |
-  | --domain                | The domain to use for creating routes                |
-  | --host-suffix           | A suffix to append in the route host name            |
-  | --skip-maven-settings   | Don't install the maven settings                     |
-  | --skip-release-settings | Don't install the release settings                   |
-  +-------------------------|------------------------------------------------------+
+| Parameter               | Description                                          |
+|-------------------------|------------------------------------------------------|
+| --flavor                | The template type to use (ephemeral, persistent)     |
+| --namespace             | The namespace to install CI into                     |
+| --version               | The version of the artifacts to build                |
+| --domain                | The domain to use for creating routes                |
+| --host-suffix           | A suffix to append in the route host name            |
+| --skip-maven-settings   | Don't install the maven settings                     |
+| --skip-release-settings | Don't install the release settings                   |
 
   A special category of parameters that is related to passing sensitive information:
 
-  +-------------------------|-----------------------------------------------+
-  | Parameter               | Description                                   |
-  +-------------------------|-----------------------------------------------+
-  | --github-username       | The github username                           |
-  | --github-password       | The github password                           |
-  | --github-access-token   | The github access token                       |
-  | --github-client-id      | The github client id                          |
-  | --github-client-secret  | The github client secret                      |
-  | --sonatype-username     | The sonatype username                         |
-  | --sonatype-password     | The sonatype password                         |
-  | --dockerhub-username    | The dockerhub username                        |
-  | --dockerhub-email       | The dockerhub email                           |
-  | --dockerhub-password    | The dockerhub password                        |
-  +-------------------------|-----------------------------------------------+
+| Parameter               | Description                                   |
+|-------------------------|-----------------------------------------------|
+| --github-username       | The github username                           |
+| --github-password       | The github password                           |
+| --github-access-token   | The github access token                       |
+| --github-client-id      | The github client id                          |
+| --github-client-secret  | The github client secret                      |
+| --sonatype-username     | The sonatype username                         |
+| --sonatype-password     | The sonatype password                         |
+| --dockerhub-username    | The dockerhub username                        |
+| --dockerhub-email       | The dockerhub email                           |
+| --dockerhub-password    | The dockerhub password                        |
 
 
 Note: Depending on the components you are installing, the installer will require access to sensitive information like keys, passwords etc. Those can be passed with the parameters shown above or using [pass](https://password-store.org).
