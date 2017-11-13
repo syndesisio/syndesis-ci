@@ -184,7 +184,13 @@ function dockerbuild() {
   fi
 
   tar --exclude='.git' -czvf /tmp/archive.tar.gz .
-  oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS
+  oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+
+  TAG=`oc get istag $OC_OPTS | grep "$NAME:$VERSION"`
+  if [ -z "$TAG" ]; then
+    echo "Could not find tag: $NAME:$VERSION"
+    exit -1
+  fi
 
   echo $NAME
   if [ -n "$RELEASE" ]; then
@@ -199,7 +205,7 @@ function dockerbuild() {
       oc new-build --name $RELEASE_NAME --binary=true --to=docker.io/syndesis/$NAME:$VERSION --strategy=source --to-docker=true $BC_OPTS $OC_OPTS || true
     fi
     oc set build-secret --push $RELEASE_NAME dockerhub
-    oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS
+    oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
   fi
 
   rm /tmp/archive.tar.gz
