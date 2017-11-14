@@ -184,7 +184,15 @@ function dockerbuild() {
   fi
 
   tar --exclude='.git' -czvf /tmp/archive.tar.gz .
-  oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+
+  TAR_FILES=`ls -al $PWD | grep -v $DOCKERFILE | grep -v total | wc -l`
+  if [ "$TAR_FILES" -le "2" ]; then
+    echo "No files to add to archive. Starting plain docker build"
+    oc start-build $NAME -F $OC_OPTS || true
+  else
+    echo "Starting binary build"
+    oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+  fi
 
   TAG=`oc get istag $OC_OPTS | grep "$NAME:$VERSION"`
   if [ -z "$TAG" ]; then
@@ -205,7 +213,15 @@ function dockerbuild() {
       oc new-build --name $RELEASE_NAME --binary=true --to=docker.io/syndesis/$NAME:$VERSION --strategy=source --to-docker=true $BC_OPTS $OC_OPTS || true
     fi
     oc set build-secret --push $RELEASE_NAME dockerhub
-    oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+
+    RELEASE_TAR_FILES=`ls -al $PWD | grep -v $DOCKERFILE | grep -v total | wc -l`
+    if [ "$RELEASE_TAR_FILES" -le "2" ]; then
+      echo "No files to add to archive. Starting plain docker build"
+      oc start-build $RELEASE_NAME -F $OC_OPTS || true
+    else
+      echo "Starting binary build"
+      oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+    fi
   fi
 
   rm /tmp/archive.tar.gz
@@ -353,6 +369,7 @@ function init() {
   fi
 
 }
+
 #
 # Options and flags
 SKIP_TESTS=$(hasflag --skip-tests "$@" 2> /dev/null)
