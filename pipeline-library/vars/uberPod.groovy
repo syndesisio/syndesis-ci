@@ -37,8 +37,8 @@ def call(Map parameters = [:], body) {
     def isPersistent = !mavenRepositoryClaim.isEmpty()
     def hasSettingsXml = !mavenSettingsXmlSecret.isEmpty()
 
-    def internalRegistry = parameters.get('internalRegistry', findInternalRegistry(namespace: "$namespace", imagestream: "jenkins-slave-maven-centos7"))
-    def image = !internalRegistry.isEmpty() ? parameters.get('image', "${internalRegistry}/${namespace}/jenkins-slave-maven-centos7:1.0.3") : parameters.get('image', 'syndesis/jenkins-slave-maven-centos7:1.0.3')
+    def internalRegistry = parameters.get('internalRegistry', findInternalRegistry(namespace: "$namespace", imagestream: "jenkins-slave-full-centos7"))
+    def image = !internalRegistry.isEmpty() ? parameters.get('image', "${internalRegistry}/${namespace}/jenkins-slave-full-centos7:1.0.8") : parameters.get('image', 'syndesis/jenkins-slave-full-centos7:1.0.8')
 
     def volumes = []
     envVars.add(containerEnvVar(key: 'MAVEN_OPTS', value: "-Duser.home=${workingDir} -Dmaven.repo.local=${mavenLocalRepositoryPath}"))
