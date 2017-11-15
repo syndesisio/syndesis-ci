@@ -3,6 +3,9 @@
 # Exit if any error occurs
 set -e
 
+# Show commands for troubleshooting
+set -x
+
 #
 # Display a help message.
 function displayHelp() {
@@ -154,7 +157,7 @@ function dockerbuild() {
   local BUILDER_TAG=${4:-"latest"}
   local BC_OPTS=""
   if [ -n "$BUILDER_IMAGESTREAM" ];then
-    echo "Using image stream: $BUILDER_IMAGESTREAM"
+    echo "Using image stream: $BUILDER_IMAGESTREAM:${BUILDER_TAG}"
     BC_OPTS=" --image-stream=$BUILDER_IMAGESTREAM:${BUILDER_TAG}"
   fi
 
@@ -192,6 +195,7 @@ function dockerbuild() {
   else
     echo "Starting binary build"
     oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+    echo ""
   fi
 
   TAG=`oc get istag $OC_OPTS | grep "$NAME:$VERSION"`
@@ -214,13 +218,13 @@ function dockerbuild() {
     fi
     oc set build-secret --push $RELEASE_NAME dockerhub
 
-    RELEASE_TAR_FILES=`ls -al $PWD | grep -v $DOCKERFILE | grep -v total | wc -l`
-    if [ "$RELEASE_TAR_FILES" -le "2" ]; then
+    if [ "$TAR_FILES" -le "2" ]; then
       echo "No files to add to archive. Starting plain docker build"
       oc start-build $RELEASE_NAME -F $OC_OPTS || true
     else
       echo "Starting binary build"
       oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
+      echo ""
     fi
   fi
 
