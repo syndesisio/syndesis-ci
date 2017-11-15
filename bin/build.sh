@@ -149,6 +149,24 @@ function setfromtag() {
 }
 
 #
+# Returns a running build of the specified build config.
+function runningbuildof() {
+  RUNNING_BUILDS=`oc get builds ${@:2} | grep $1 |  grep Running || echo ""`
+  echo $RUNNING_BUILDS | awk -F " " '{print $1}'
+}
+
+#
+# Waits for the build to finish.
+function waitforbuild() {
+  local BUILD=$(runningbuildof $1 ${@:2})
+
+  if [ -n "$BUILD" ]; then
+    echo "Build: $BUILD is still running... Waiting for build to finish!"
+    oc logs builds/$BUILD --follow ${@:2}
+  fi
+}
+
+#
 # Perform a dockerbuild via build config.
 function dockerbuild() {
   local DOCKERFILE=$1
@@ -192,13 +210,14 @@ function dockerbuild() {
   if [ "$TAR_FILES" -le "2" ]; then
     echo "No files to add to archive. Starting plain docker build"
     oc start-build $NAME -F $OC_OPTS || true
+    waitforbuild $NAME $OC_OPTS
   else
     echo "Starting binary build"
     oc start-build $NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
-    echo ""
+    waitforbuild $NAME $OC_OPTS
   fi
 
-  TAG=`oc get istag $OC_OPTS | grep "$NAME:$VERSION"`
+  TAG=`oc get istag $OC_OPTS | grep "$NAME:$VERSION" || echo ""`
   if [ -z "$TAG" ]; then
     echo "Could not find tag: $NAME:$VERSION"
     exit -1
@@ -221,10 +240,11 @@ function dockerbuild() {
     if [ "$TAR_FILES" -le "2" ]; then
       echo "No files to add to archive. Starting plain docker build"
       oc start-build $RELEASE_NAME -F $OC_OPTS || true
+      waitforbuild $RELEASE_NAME $OC_OPTS
     else
       echo "Starting binary build"
       oc start-build $RELEASE_NAME --from-archive=/tmp/archive.tar.gz -F $OC_OPTS || true
-      echo ""
+      waitforbuild $RELEASE_NAME $OC_OPTS
     fi
   fi
 
