@@ -17,7 +17,7 @@ def call(Map parameters = [:], body) {
 
     def defaultLabel = buildId('uberpod')
     def label = parameters.get('label', defaultLabel)
-    def name = parameters.get('name', 'jnlp') //The container needs to be called jnlp (kubernetes-plugin requirement).
+    def name = parameters.get('name', buildId()) 
 
     def cloud = parameters.get('cloud', 'openshift')
 
@@ -55,7 +55,7 @@ def call(Map parameters = [:], body) {
 
     podTemplate(cloud: "${cloud}", name: "${name}", namespace: "${namespace}", label: label, inheritFrom: "${inheritFrom}", serviceAccount: "${serviceAccount}",
             idleMinutesStr: "${idleMinutes}",
-            containers: [containerTemplate(name: "${name}", image: "${image}", command: '/bin/sh -c', args: 'cat', ttyEnabled: true, envVars: envVars)],
+            containers: [containerTemplate(name: "jnlp", image: "${image}", command: '/bin/sh -c', args: 'cat', ttyEnabled: true, envVars: envVars)],
             volumes: volumes) {
         body()
     }
